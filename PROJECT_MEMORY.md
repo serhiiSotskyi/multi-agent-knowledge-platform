@@ -108,7 +108,7 @@ Configuration check results:
 - Qdrant Cloud API key works; current cluster has zero collections.
 - Supabase service-role key works against REST.
 - Supabase publishable key works for client/Auth use when sent as `apikey` only. Do not send publishable keys as `Authorization: Bearer ...`; authenticated user JWTs go in Authorization later.
-- Current `DATABASE_URL` is still the Supabase direct database host (`db.<project>.supabase.co`), which resolves only to IPv6 here. For Railway deployment use the Supabase pooler/session connection string instead.
+- Supabase `DATABASE_URL` now uses the pooler host `aws-0-eu-west-1.pooler.supabase.com`, resolves over IPv4, and `psql` connects successfully.
 
 ## Open Items
 
