@@ -14,6 +14,8 @@ Persistent working memory for this diploma project. Future Codex sessions should
 
 `https://github.com/serhiiSotskyi/multi-agent-knowledge-platform`
 
+Visibility: public
+
 ## Current Project Shape
 
 This project is currently a document workspace being initialized as a git repository for the planned multi-agent knowledge platform.
@@ -68,10 +70,11 @@ Known rule/template documents:
 - Created the initial local commit with the diploma workspace.
 - Created private GitHub repository `serhiiSotskyi/multi-agent-knowledge-platform`.
 - Pushed local `main` branch to GitHub and set upstream tracking.
+- Changed GitHub repository visibility from private to public at the user's request.
 
 Current status:
-- Local repository initialization, remote creation, and initial push are complete.
-- Project memory update is being committed and pushed.
+- Local repository initialization, remote creation, initial push, and public visibility update are complete.
+- Project memory visibility update is being committed and pushed.
 
 Next actions:
 - Continue project scaffolding in this repository when requested.
