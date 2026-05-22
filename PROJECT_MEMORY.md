@@ -107,8 +107,8 @@ Configuration check results:
 - Anthropic API key works with `claude-sonnet-4-6`.
 - Qdrant Cloud API key works; current cluster has zero collections.
 - Supabase service-role key works against REST.
-- Supabase anon key currently returns `Invalid API key`; recopy the anon/public key from Supabase Project Settings.
-- Current Supabase direct database host resolves only to IPv6; for Railway deployment use Supabase pooler/session connection string instead of the direct `db.<project>.supabase.co` URL.
+- Supabase publishable key works for client/Auth use when sent as `apikey` only. Do not send publishable keys as `Authorization: Bearer ...`; authenticated user JWTs go in Authorization later.
+- Current `DATABASE_URL` is still the Supabase direct database host (`db.<project>.supabase.co`), which resolves only to IPv6 here. For Railway deployment use the Supabase pooler/session connection string instead.
 
 ## Open Items
 
