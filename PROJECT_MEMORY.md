@@ -10,6 +10,10 @@ Persistent working memory for this diploma project. Future Codex sessions should
 
 `/Users/sergeysotskiy/Documents/poly/дипломна робота`
 
+## GitHub Repository
+
+`https://github.com/serhiiSotskyi/multi-agent-knowledge-platform`
+
 ## Current Project Shape
 
 This project is currently a document workspace being initialized as a git repository for the planned multi-agent knowledge platform.
@@ -62,18 +66,17 @@ Known rule/template documents:
 - Added `README.md` describing the academic project scope and planned stack.
 - Initialized a local git repository and set the default branch to `main`.
 - Created the initial local commit with the diploma workspace.
+- Created private GitHub repository `serhiiSotskyi/multi-agent-knowledge-platform`.
+- Pushed local `main` branch to GitHub and set upstream tracking.
 
 Current status:
-- Local repository initialization and initial commit are complete.
-- GitHub remote creation/push is blocked until GitHub authentication is available.
+- Local repository initialization, remote creation, and initial push are complete.
+- Project memory update is being committed and pushed.
 
 Next actions:
-- Initialize git repository locally.
-- Commit the current document workspace and metadata files.
-- After authentication, create GitHub repository `multi-agent-knowledge-platform` and push the initial commit.
+- Continue project scaffolding in this repository when requested.
 
 ## Open Items
 
 - Add a short summary of the diploma topic, requirements, supervisor feedback, and current writing status when those are available.
 - Track future document edits with source file, output file, and verification steps.
-- Authenticate GitHub CLI with `gh auth login` before remote creation and push.
