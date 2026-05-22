@@ -104,12 +104,17 @@ function AuthPanel() {
 
   async function submit() {
     setMessage("");
+    const emailRedirectTo = typeof window === "undefined" ? undefined : window.location.origin;
     const result =
       mode === "signin"
         ? await supabase.auth.signInWithPassword({ email, password })
-        : await supabase.auth.signUp({ email, password });
+        : await supabase.auth.signUp({
+            email,
+            password,
+            options: { emailRedirectTo },
+          });
     if (result.error) setMessage(result.error.message);
-    else if (mode === "signup") setMessage("Registration created. Check email confirmation settings if sign-in is blocked.");
+    else if (mode === "signup") setMessage("Registration created. Check your email to confirm your account.");
   }
 
   return (
@@ -491,4 +496,3 @@ async function downloadRun(runId: string) {
   link.click();
   URL.revokeObjectURL(url);
 }
-

@@ -1,0 +1,26 @@
+{
+  "date": "2026-05-22",
+  "issue": "Supabase email confirmation links used the local localhost redirect URL in production.",
+  "frontend_fix": "Signup now passes emailRedirectTo using the current browser origin.",
+  "security_fix": "Backend now verifies that the Supabase JWT session_id still exists in auth.sessions after Supabase token validation.",
+  "exposed_session_response": {
+    "refresh_tokens_revoked": 1,
+    "sessions_removed": 1
+  },
+  "checks": {
+    "frontend_build": "passed with npm run build",
+    "frontend_deploy": "passed and aliased to https://modelweave-six.vercel.app",
+    "backend_compile": "passed with backend/.venv/bin/python -m compileall backend/app",
+    "backend_deploy": "passed on Railway deployment b6da5fbb-4296-49a4-ba19-8076e9f2d6a0",
+    "protected_api_before_session_revocation_status": 200,
+    "protected_api_after_session_revocation_status": 401,
+    "frontend_http_status": 200,
+    "backend_health": {
+      "ok": true,
+      "app": "ModelWeave"
+    }
+  },
+  "blocked_checks": {
+    "live_signup_email_redirect_probe": "Supabase returned email rate limit exceeded, so a fresh confirmation email could not be generated immediately."
+  }
+}

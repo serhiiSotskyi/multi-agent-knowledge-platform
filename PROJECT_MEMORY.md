@@ -137,6 +137,10 @@ Deployment artifacts:
 - Railway backend health check passed: `GET https://api-production-e70a9.up.railway.app/api/health`.
 - Vercel frontend health check passed: `GET https://modelweave-six.vercel.app`.
 - CORS check passed for origin `https://modelweave-six.vercel.app` against the Railway backend.
+- 2026-05-22: Fixed production email confirmation redirect by passing `emailRedirectTo` from the browser origin during Supabase signup.
+- 2026-05-22: Revoked one exposed Supabase refresh token and removed one active session after a confirmation link containing tokens was pasted into the chat.
+- 2026-05-22: Hardened backend auth by checking the JWT `session_id` against `auth.sessions` after Supabase token validation; revoked sessions now return 401 immediately from protected API routes.
+- 2026-05-22: Verified session hardening with a temporary confirmed test user: protected API returned 200 before session deletion and 401 after deleting the same session.
 
 Deployment changes made:
 - Added backend CORS regex support for Vercel preview/production domains.
@@ -150,6 +154,15 @@ Commands or checks run:
 - `vercel deploy --prod --yes --project modelweave --force`
 - `curl -sS https://api-production-e70a9.up.railway.app/api/health`
 - `curl -sS https://modelweave-six.vercel.app`
+- `npm run build` from `frontend/`
+- `backend/.venv/bin/python -m compileall backend/app`
+- `railway up --service api`
+- Supabase Auth REST temporary user/session test; results saved in `evidence/tests/auth-redirect-session-fix-2026-05-22.json`
+
+Current auth deployment note:
+- New registration emails should be generated from `https://modelweave-six.vercel.app` because the app now passes the current origin as `emailRedirectTo`.
+- If Supabase still rejects redirects after the rate limit clears, set Supabase Dashboard -> Authentication -> URL Configuration -> Site URL to `https://modelweave-six.vercel.app` and add the same URL under Redirect URLs.
+- A direct live signup-email redirect probe was blocked by Supabase email rate limiting immediately after the issue was found.
 
 Implementation security decision:
 - Use Supabase Auth for real registration and login.
