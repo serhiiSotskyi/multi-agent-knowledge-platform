@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     frontend_url: str = "http://localhost:3000"
     backend_url: str = "http://localhost:8000"
     cors_origins: str = "http://localhost:3000"
+    cors_origin_regex: str | None = r"https://.*\.vercel\.app"
 
     llm_provider: str = "anthropic"
     anthropic_api_key: str = ""

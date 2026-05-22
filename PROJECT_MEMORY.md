@@ -108,6 +108,8 @@ Current status:
 - Local backend health check passed at `http://127.0.0.1:8000/api/health`.
 - Frontend production build passed with `next build --webpack`. Webpack is required locally because Turbopack panics on the Cyrillic workspace path.
 - Local authenticated e2e test passed: Supabase test user, encrypted Anthropic key save, default agents/workflow bootstrap, synthetic corpus seed, five-agent workflow run, six citations, DOCX export.
+- Production backend is live on Railway: `https://api-production-e70a9.up.railway.app`.
+- Production frontend is live on Vercel: `https://modelweave-six.vercel.app`.
 
 Next actions:
 - Commit MVP implementation and evidence artifacts.
@@ -130,6 +132,24 @@ Evidence artifacts:
 - `evidence/tests/e2e-local-summary.json`
 - `evidence/tests/e2e-local-run.json`
 - `evidence/reports/modelweave-e2e-report.docx`
+
+Deployment artifacts:
+- Railway backend health check passed: `GET https://api-production-e70a9.up.railway.app/api/health`.
+- Vercel frontend health check passed: `GET https://modelweave-six.vercel.app`.
+- CORS check passed for origin `https://modelweave-six.vercel.app` against the Railway backend.
+
+Deployment changes made:
+- Added backend CORS regex support for Vercel preview/production domains.
+- Added `backend/data/synthetic-corpus/` so Railway can seed demo documents from the deployed backend.
+- Set Vercel project framework to Next.js and disabled SSO deployment protection so the production URL is public.
+- Added `frontend/vercel.json` with explicit build and install commands.
+
+Commands or checks run:
+- `vercel project inspect modelweave`
+- `vercel project protection disable modelweave --sso`
+- `vercel deploy --prod --yes --project modelweave --force`
+- `curl -sS https://api-production-e70a9.up.railway.app/api/health`
+- `curl -sS https://modelweave-six.vercel.app`
 
 Implementation security decision:
 - Use Supabase Auth for real registration and login.
