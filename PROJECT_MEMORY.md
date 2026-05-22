@@ -61,6 +61,15 @@ Known rule/template documents:
 - 2026-05-22: Demo corpus domain is a fictional PPC/SEO agency and must have no real company data.
 - 2026-05-22: Supervisor name: Грішина Віра Олександрівна.
 - 2026-05-22: No external connectors are needed for this academic version.
+- 2026-05-22: MVP must have real open registration/login through Supabase Auth.
+- 2026-05-22: Users must bring their own Anthropic API key for agent runs. Do not make the app rely on the owner's Anthropic key as a shared provider key for all users.
+- 2026-05-22: Document upload support required in MVP: PDF, TXT, Markdown, and DOCX.
+- 2026-05-22: Agent builder must include a full visual drag-and-drop workflow builder plus predefined cooperative pipelines and editable agents.
+- 2026-05-22: UI language is English only.
+- 2026-05-22: Generated reports must export as DOCX.
+- 2026-05-22: References used in the thesis must be English-language sources only.
+- 2026-05-22: Academic writing must include enough mathematical content: RAG formalization, embeddings, vectorization, cosine similarity, graph/workflow model, retrieval metrics, complexity, and LaTeX-style formulas suitable for Word equation rendering.
+- 2026-05-22: Store evidence during development: test outputs, deployment outputs, benchmark results, generated reports, screenshots/graphs where available, and references.
 
 ## Activity Log
 
@@ -109,6 +118,10 @@ Configuration check results:
 - Supabase service-role key works against REST.
 - Supabase publishable key works for client/Auth use when sent as `apikey` only. Do not send publishable keys as `Authorization: Bearer ...`; authenticated user JWTs go in Authorization later.
 - Supabase `DATABASE_URL` now uses the pooler host `aws-0-eu-west-1.pooler.supabase.com`, resolves over IPv4, and `psql` connects successfully.
+
+Implementation security decision:
+- Use Supabase Auth for real registration and login.
+- For BYOK agent execution, prefer storing user Anthropic keys encrypted server-side using `API_KEY_ENCRYPTION_SECRET`; if schedule pressure requires a temporary fallback, pass the key per run and never persist it.
 
 ## Open Items
 
