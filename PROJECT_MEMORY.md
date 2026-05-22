@@ -85,6 +85,7 @@ Known rule/template documents:
 - Pushed local `main` branch to GitHub and set upstream tracking.
 - Changed GitHub repository visibility from private to public at the user's request.
 - Added `.env.example` and local ignored `.env` for Anthropic, Supabase, Qdrant, Redis, and app configuration.
+- Updated default Anthropic model from obsolete `claude-3-5-sonnet-latest` to account-available `claude-sonnet-4-6`.
 - Updated README with approved title, app name, supervisor, planned deployment, and data-safety rule.
 - Generated a fully synthetic PPC/SEO agency corpus under `data/synthetic-corpus/`.
 - Installed Vercel CLI 54.3.0 and Railway CLI 4.59.0 locally under `~/.npm-global`.
@@ -99,6 +100,15 @@ Next actions:
 - Build backend/frontend/infra scaffold around the approved architecture.
 - Replace or update diploma plan text later so it uses the approved title while preserving the multi-agent/RAG implementation idea.
 - User should run `vercel login` and `railway login` when ready to authenticate deployment providers.
+
+Configuration check results:
+- Vercel CLI authenticated as `serhiisotskyi`.
+- Railway CLI authenticated as `Serhii Sotskyi`.
+- Anthropic API key works with `claude-sonnet-4-6`.
+- Qdrant Cloud API key works; current cluster has zero collections.
+- Supabase service-role key works against REST.
+- Supabase anon key currently returns `Invalid API key`; recopy the anon/public key from Supabase Project Settings.
+- Current Supabase direct database host resolves only to IPv6; for Railway deployment use Supabase pooler/session connection string instead of the direct `db.<project>.supabase.co` URL.
 
 ## Open Items
 
