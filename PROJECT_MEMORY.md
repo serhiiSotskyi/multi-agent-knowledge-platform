@@ -87,15 +87,18 @@ Known rule/template documents:
 - Added `.env.example` and local ignored `.env` for Anthropic, Supabase, Qdrant, Redis, and app configuration.
 - Updated README with approved title, app name, supervisor, planned deployment, and data-safety rule.
 - Generated a fully synthetic PPC/SEO agency corpus under `data/synthetic-corpus/`.
+- Installed Vercel CLI 54.3.0 and Railway CLI 4.59.0 locally under `~/.npm-global`.
+- Added symlinks for `vercel`, `vc`, and `railway` into `/opt/homebrew/bin` so they are available on PATH.
 
 Current status:
 - Repository setup and public visibility are complete.
-- Latest scope/configuration/corpus changes are being committed and pushed.
+- Deployment CLIs are installed locally but provider login still needs user authentication.
 
 Next actions:
 - Continue project scaffolding in this repository when requested.
 - Build backend/frontend/infra scaffold around the approved architecture.
 - Replace or update diploma plan text later so it uses the approved title while preserving the multi-agent/RAG implementation idea.
+- User should run `vercel login` and `railway login` when ready to authenticate deployment providers.
 
 ## Open Items
 
