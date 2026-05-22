@@ -1,0 +1,13 @@
+{
+  "timestamp": "2026-05-22T14:56:14.489Z",
+  "backend_health": true,
+  "auth_flow": "Supabase admin-created confirmed test user, password grant token, backend /api/me validated token",
+  "provider_key_storage": "Anthropic key saved through /api/provider-key and used for the test user",
+  "synthetic_corpus_seeded": true,
+  "workflow_run_status": 200,
+  "docx_export_status": 200,
+  "trace_count": 5,
+  "citation_count": 6,
+  "output_chars": 3247,
+  "report_path": "evidence/reports/modelweave-e2e-report.docx"
+}

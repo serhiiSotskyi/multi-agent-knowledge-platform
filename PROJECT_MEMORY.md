@@ -103,10 +103,16 @@ Known rule/template documents:
 Current status:
 - Repository setup and public visibility are complete.
 - Deployment CLIs are installed locally but provider login still needs user authentication.
+- Backend MVP scaffold is implemented: FastAPI, Supabase auth validation, encrypted BYOK Anthropic key storage, document parsing, Qdrant indexing/retrieval, cooperative workflow execution, and DOCX export.
+- Frontend MVP scaffold is implemented: Next.js, Supabase login/register, API key setup, document upload/seed, agent creation, React Flow workflow builder, workflow runner, run history, and DOCX download.
+- Local backend health check passed at `http://127.0.0.1:8000/api/health`.
+- Frontend production build passed with `next build --webpack`. Webpack is required locally because Turbopack panics on the Cyrillic workspace path.
+- Local authenticated e2e test passed: Supabase test user, encrypted Anthropic key save, default agents/workflow bootstrap, synthetic corpus seed, five-agent workflow run, six citations, DOCX export.
 
 Next actions:
-- Continue project scaffolding in this repository when requested.
-- Build backend/frontend/infra scaffold around the approved architecture.
+- Commit MVP implementation and evidence artifacts.
+- Deploy backend to Railway.
+- Deploy frontend to Vercel.
 - Replace or update diploma plan text later so it uses the approved title while preserving the multi-agent/RAG implementation idea.
 - User should run `vercel login` and `railway login` when ready to authenticate deployment providers.
 
@@ -118,6 +124,12 @@ Configuration check results:
 - Supabase service-role key works against REST.
 - Supabase publishable key works for client/Auth use when sent as `apikey` only. Do not send publishable keys as `Authorization: Bearer ...`; authenticated user JWTs go in Authorization later.
 - Supabase `DATABASE_URL` now uses the pooler host `aws-0-eu-west-1.pooler.supabase.com`, resolves over IPv4, and `psql` connects successfully.
+- Qdrant requires a `user_id` payload index for filtered retrieval; startup now creates it.
+
+Evidence artifacts:
+- `evidence/tests/e2e-local-summary.json`
+- `evidence/tests/e2e-local-run.json`
+- `evidence/reports/modelweave-e2e-report.docx`
 
 Implementation security decision:
 - Use Supabase Auth for real registration and login.
