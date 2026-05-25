@@ -200,3 +200,9 @@ Next actions:
 - Deploy backend to Railway so production runs migration `002_agency_workspace.sql`.
 - Deploy frontend to Vercel.
 - Verify production health and public frontend.
+
+Final deployment status:
+- Changes committed and pushed in `0063725` (`Add PPC SEO agency workforce execution`) and `8e91496` (`Update ModelWeave agency metadata`).
+- Backend deployed to Railway deployment `518c2fb6-f353-4872-8d63-4ec1e5d39e02`.
+- Frontend deployed to Vercel deployment `dpl_F5jpCxF49VXYHGv7coftJY5P7TaS` and aliased to `https://modelweave-six.vercel.app`.
+- Production checks passed: frontend HTTP 200, backend health OK, deployed metadata includes "AI workforce platform for PPC and SEO agency operations", and deployed JS contains Clients, Campaigns, Approvals, Tasks, and Agency Runs tabs.
