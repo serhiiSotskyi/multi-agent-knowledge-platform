@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "ModelWeave",
-  description: "Service-oriented multi-agent language-model workflows for enterprise knowledge use cases.",
+  description: "AI workforce platform for PPC and SEO agency operations.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -13,4 +13,3 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     </html>
   );
 }
-
