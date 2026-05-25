@@ -75,7 +75,7 @@ textarea {
 .app-shell {
   min-height: 100vh;
   display: grid;
-  grid-template-columns: 260px minmax(0, 1fr);
+  grid-template-columns: 290px minmax(0, 1fr);
 }
 
 .sidebar {
@@ -227,6 +227,21 @@ textarea {
   font-size: 12px;
 }
 
+.score-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.score-grid span {
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  border-radius: 6px;
+  padding: 10px;
+  text-align: center;
+  font-size: 12px;
+}
+
 @media (max-width: 900px) {
   .app-shell {
     grid-template-columns: 1fr;
@@ -241,4 +256,3 @@ textarea {
     grid-template-columns: 1fr;
   }
 }
-

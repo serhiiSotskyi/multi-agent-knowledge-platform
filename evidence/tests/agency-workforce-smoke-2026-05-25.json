@@ -1,0 +1,18 @@
+{
+  "ok": true,
+  "email": "modelweave-agency-smoke-1779732914@maildrop.cc",
+  "user_removed": true,
+  "client_count": 1,
+  "campaign_count": 2,
+  "seeded_documents": 16,
+  "workflow_id": "0115e11d-8b51-4d78-9d31-81a9dbbfb3bb",
+  "run_id": "6d8a4686-1d5e-4513-85e3-6db20e1f7305",
+  "trace_steps": 8,
+  "citation_count": 8,
+  "event_count": 17,
+  "approval_count": 4,
+  "tasks_before_approval": 3,
+  "approved_task_count": 1,
+  "overall_score": 1.0,
+  "docx_bytes": 51053
+}

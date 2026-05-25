@@ -9,6 +9,7 @@ from psycopg.types.json import Jsonb
 from app.core.config import get_settings
 from app.core.security import CurrentUser, get_current_user
 from app.db.database import run_one, run_query
+from app.services.agency import approve_action, ensure_agency_defaults, reject_action
 from app.services.agents import bootstrap_defaults, run_workflow
 from app.services.documents import chunk_text, extract_text
 from app.services.provider_keys import has_provider_key, save_provider_key
@@ -44,6 +45,48 @@ class RunIn(BaseModel):
     prompt: str = Field(min_length=3)
 
 
+class ClientIn(BaseModel):
+    name: str
+    industry: str = ""
+    goals: str = ""
+    tone: str = ""
+    constraints: str = ""
+    status: str = "active"
+
+
+class CampaignIn(BaseModel):
+    client_id: str
+    name: str
+    channel: str = "mixed"
+    status: str = "active"
+    objective: str = ""
+    monthly_budget: float | None = None
+    notes: str = ""
+
+
+class TaskIn(BaseModel):
+    client_id: str | None = None
+    campaign_id: str | None = None
+    title: str
+    description: str = ""
+    discipline: str = "operations"
+    priority: str = "medium"
+    status: str = "approved"
+
+
+class ApprovalIn(BaseModel):
+    entity_type: str
+    entity_id: str | None = None
+    action_type: str
+    title: str
+    summary: str = ""
+    payload: dict = Field(default_factory=dict)
+
+
+class DecisionIn(BaseModel):
+    note: str = ""
+
+
 @router.get("/health")
 def health() -> dict:
     return {"ok": True, "app": get_settings().app_name}
@@ -59,6 +102,11 @@ def bootstrap(user: CurrentUser = Depends(get_current_user)) -> dict:
     return bootstrap_defaults(user.id)
 
 
+@router.post("/agency/bootstrap")
+def bootstrap_agency(user: CurrentUser = Depends(get_current_user)) -> dict:
+    return ensure_agency_defaults(user.id)
+
+
 @router.get("/provider-key/status")
 def provider_key_status(provider: str = "anthropic", user: CurrentUser = Depends(get_current_user)) -> dict:
     return {"provider": provider, "configured": has_provider_key(user.id, provider)}
@@ -68,6 +116,161 @@ def provider_key_status(provider: str = "anthropic", user: CurrentUser = Depends
 def provider_key(body: ProviderKeyIn, user: CurrentUser = Depends(get_current_user)) -> dict:
     save_provider_key(user.id, body.provider, body.api_key)
     return {"provider": body.provider, "configured": True}
+
+
+@router.get("/clients")
+def list_clients(user: CurrentUser = Depends(get_current_user)) -> list[dict]:
+    return run_query("select * from clients where user_id = %(user_id)s order by created_at", {"user_id": user.id})
+
+
+@router.post("/clients")
+def create_client(body: ClientIn, user: CurrentUser = Depends(get_current_user)) -> dict:
+    client_id = str(uuid4())
+    run_query(
+        """
+        insert into clients (id, user_id, name, industry, goals, tone, constraints, status)
+        values (%(id)s, %(user_id)s, %(name)s, %(industry)s, %(goals)s, %(tone)s, %(constraints)s, %(status)s)
+        """,
+        {"id": client_id, "user_id": user.id, **body.model_dump()},
+    )
+    return run_one("select * from clients where id = %(id)s", {"id": client_id})
+
+
+@router.put("/clients/{client_id}")
+def update_client(client_id: str, body: ClientIn, user: CurrentUser = Depends(get_current_user)) -> dict:
+    row = run_one("select id from clients where id = %(id)s and user_id = %(user_id)s", {"id": client_id, "user_id": user.id})
+    if not row:
+        raise HTTPException(status_code=404, detail="Client not found")
+    run_query(
+        """
+        update clients
+        set name=%(name)s, industry=%(industry)s, goals=%(goals)s, tone=%(tone)s,
+            constraints=%(constraints)s, status=%(status)s, updated_at=now()
+        where id=%(id)s and user_id=%(user_id)s
+        """,
+        {"id": client_id, "user_id": user.id, **body.model_dump()},
+    )
+    return run_one("select * from clients where id = %(id)s", {"id": client_id})
+
+
+@router.get("/campaigns")
+def list_campaigns(user: CurrentUser = Depends(get_current_user)) -> list[dict]:
+    return run_query(
+        """
+        select c.*, cl.name as client_name
+        from campaigns c
+        join clients cl on cl.id = c.client_id
+        where c.user_id = %(user_id)s
+        order by c.created_at
+        """,
+        {"user_id": user.id},
+    )
+
+
+@router.post("/campaigns")
+def create_campaign(body: CampaignIn, user: CurrentUser = Depends(get_current_user)) -> dict:
+    client = run_one("select id from clients where id = %(id)s and user_id = %(user_id)s", {"id": body.client_id, "user_id": user.id})
+    if not client:
+        raise HTTPException(status_code=404, detail="Client not found")
+    campaign_id = str(uuid4())
+    run_query(
+        """
+        insert into campaigns (id, user_id, client_id, name, channel, status, objective, monthly_budget, notes)
+        values (%(id)s, %(user_id)s, %(client_id)s, %(name)s, %(channel)s, %(status)s, %(objective)s, %(monthly_budget)s, %(notes)s)
+        """,
+        {"id": campaign_id, "user_id": user.id, **body.model_dump()},
+    )
+    return run_one("select * from campaigns where id = %(id)s", {"id": campaign_id})
+
+
+@router.put("/campaigns/{campaign_id}")
+def update_campaign(campaign_id: str, body: CampaignIn, user: CurrentUser = Depends(get_current_user)) -> dict:
+    row = run_one("select id from campaigns where id = %(id)s and user_id = %(user_id)s", {"id": campaign_id, "user_id": user.id})
+    if not row:
+        raise HTTPException(status_code=404, detail="Campaign not found")
+    run_query(
+        """
+        update campaigns
+        set client_id=%(client_id)s, name=%(name)s, channel=%(channel)s, status=%(status)s,
+            objective=%(objective)s, monthly_budget=%(monthly_budget)s, notes=%(notes)s, updated_at=now()
+        where id=%(id)s and user_id=%(user_id)s
+        """,
+        {"id": campaign_id, "user_id": user.id, **body.model_dump()},
+    )
+    return run_one("select * from campaigns where id = %(id)s", {"id": campaign_id})
+
+
+@router.get("/tasks")
+def list_tasks(user: CurrentUser = Depends(get_current_user)) -> list[dict]:
+    return run_query(
+        """
+        select t.*, cl.name as client_name, c.name as campaign_name
+        from agency_tasks t
+        left join clients cl on cl.id = t.client_id
+        left join campaigns c on c.id = t.campaign_id
+        where t.user_id = %(user_id)s
+        order by t.created_at desc
+        """,
+        {"user_id": user.id},
+    )
+
+
+@router.post("/tasks")
+def create_task(body: TaskIn, user: CurrentUser = Depends(get_current_user)) -> dict:
+    task_id = str(uuid4())
+    run_query(
+        """
+        insert into agency_tasks (id, user_id, client_id, campaign_id, title, description, discipline, priority, status)
+        values (%(id)s, %(user_id)s, %(client_id)s, %(campaign_id)s, %(title)s, %(description)s, %(discipline)s, %(priority)s, %(status)s)
+        """,
+        {"id": task_id, "user_id": user.id, **body.model_dump()},
+    )
+    return run_one("select * from agency_tasks where id = %(id)s", {"id": task_id})
+
+
+@router.put("/tasks/{task_id}")
+def update_task(task_id: str, body: TaskIn, user: CurrentUser = Depends(get_current_user)) -> dict:
+    row = run_one("select id from agency_tasks where id = %(id)s and user_id = %(user_id)s", {"id": task_id, "user_id": user.id})
+    if not row:
+        raise HTTPException(status_code=404, detail="Task not found")
+    run_query(
+        """
+        update agency_tasks
+        set client_id=%(client_id)s, campaign_id=%(campaign_id)s, title=%(title)s, description=%(description)s,
+            discipline=%(discipline)s, priority=%(priority)s, status=%(status)s, updated_at=now()
+        where id=%(id)s and user_id=%(user_id)s
+        """,
+        {"id": task_id, "user_id": user.id, **body.model_dump()},
+    )
+    return run_one("select * from agency_tasks where id = %(id)s", {"id": task_id})
+
+
+@router.get("/approvals")
+def list_approvals(user: CurrentUser = Depends(get_current_user)) -> list[dict]:
+    return run_query("select * from approvals where user_id = %(user_id)s order by created_at desc", {"user_id": user.id})
+
+
+@router.post("/approvals")
+def create_approval(body: ApprovalIn, user: CurrentUser = Depends(get_current_user)) -> dict:
+    approval_id = str(uuid4())
+    run_query(
+        """
+        insert into approvals (id, user_id, entity_type, entity_id, action_type, title, summary, payload)
+        values (%(id)s, %(user_id)s, %(entity_type)s, %(entity_id)s, %(action_type)s, %(title)s, %(summary)s, %(payload)s::jsonb)
+        """,
+        {"id": approval_id, "user_id": user.id, **body.model_dump(), "payload": Jsonb(body.payload)},
+    )
+    return run_one("select * from approvals where id = %(id)s", {"id": approval_id})
+
+
+@router.post("/approvals/{approval_id}/approve")
+def approve_approval(approval_id: str, body: DecisionIn = DecisionIn(), user: CurrentUser = Depends(get_current_user)) -> dict:
+    return approve_action(user.id, approval_id, body.note)
+
+
+@router.post("/approvals/{approval_id}/reject")
+def reject_approval(approval_id: str, body: DecisionIn = DecisionIn(), user: CurrentUser = Depends(get_current_user)) -> dict:
+    return reject_action(user.id, approval_id, body.note)
 
 
 @router.get("/agents")
@@ -274,7 +477,42 @@ async def run_agents(body: RunIn, user: CurrentUser = Depends(get_current_user))
 
 @router.get("/runs")
 def list_runs(user: CurrentUser = Depends(get_current_user)) -> list[dict]:
-    return run_query("select id, workflow_id, prompt, output, created_at from runs where user_id = %(user_id)s order by created_at desc", {"user_id": user.id})
+    return run_query(
+        """
+        select r.id, r.workflow_id, w.name as workflow_name, r.prompt, r.output, r.created_at,
+               e.overall_score
+        from runs r
+        left join workflows w on w.id = r.workflow_id
+        left join run_evaluations e on e.run_id = r.id
+        where r.user_id = %(user_id)s
+        order by r.created_at desc
+        """,
+        {"user_id": user.id},
+    )
+
+
+@router.get("/runs/{run_id}/events")
+def run_events(run_id: str, user: CurrentUser = Depends(get_current_user)) -> list[dict]:
+    run = run_one("select id from runs where id = %(id)s and user_id = %(user_id)s", {"id": run_id, "user_id": user.id})
+    if not run:
+        raise HTTPException(status_code=404, detail="Run not found")
+    return run_query("select * from action_events where run_id = %(run_id)s order by created_at", {"run_id": run_id})
+
+
+@router.get("/runs/{run_id}/evaluation")
+def run_evaluation(run_id: str, user: CurrentUser = Depends(get_current_user)) -> dict:
+    evaluation = run_one(
+        """
+        select e.*
+        from run_evaluations e
+        join runs r on r.id = e.run_id
+        where e.run_id = %(run_id)s and r.user_id = %(user_id)s
+        """,
+        {"run_id": run_id, "user_id": user.id},
+    )
+    if not evaluation:
+        raise HTTPException(status_code=404, detail="Evaluation not found")
+    return evaluation
 
 
 @router.get("/runs/{run_id}/docx")
@@ -282,6 +520,9 @@ def run_docx(run_id: str, user: CurrentUser = Depends(get_current_user)) -> Resp
     run = run_one("select * from runs where id = %(id)s and user_id = %(user_id)s", {"id": run_id, "user_id": user.id})
     if not run:
         raise HTTPException(status_code=404, detail="Run not found")
+    run["evaluation"] = run_one("select * from run_evaluations where run_id = %(run_id)s", {"run_id": run_id})
+    run["approvals"] = run_query("select * from approvals where run_id = %(run_id)s order by created_at", {"run_id": run_id})
+    run["events"] = run_query("select * from action_events where run_id = %(run_id)s order by created_at", {"run_id": run_id})
     data = build_run_docx(run)
     return Response(
         data,

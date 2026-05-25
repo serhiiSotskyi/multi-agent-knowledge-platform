@@ -172,3 +172,31 @@ Implementation security decision:
 
 - Add a short summary of the diploma topic, requirements, supervisor feedback, and current writing status when those are available.
 - Track future document edits with source file, output file, and verification steps.
+
+### 2026-05-25
+
+Current task:
+- Implementing the PPC/SEO Agency Workforce Upgrade so ModelWeave becomes a vertical AI workforce for a fictional PPC/SEO agency, not only a generic RAG/reporting app.
+
+Completed so far:
+- Added agency workspace migration for clients, campaigns, agency tasks, approvals, action events, and run evaluations.
+- Added backend agency service logic for Harbor Homeware defaults, approval-gated task proposals, campaign update proposals, action event logging, approval/rejection, and heuristic run evaluation.
+- Replaced default agents/workflow with a Monthly PPC/SEO Operations Review workforce.
+- Added backend API endpoints for clients, campaigns, tasks, approvals, run events, and run evaluations.
+- Extended DOCX reports with execution evaluation, approval-gated actions, and timeline sections.
+- Updated frontend positioning to "AI workforce platform for PPC and SEO agency operations."
+- Added frontend tabs for Clients, Campaigns, Tasks, Approvals, and Agency Runs while preserving Documents, Agents, Workflow, Run, and Reports.
+- Added workflow-builder support for typed execution nodes: retrieval, task proposals, campaign updates, approval gate, evaluation, and DOCX export.
+- Added run result timeline display, approval-gated action display, and evaluation score cards.
+
+Checks run:
+- `backend/.venv/bin/python -m compileall backend/app`
+- `npm run build` from `frontend/`
+- Authenticated smoke test with temporary Supabase user, BYOK key, default agency bootstrap, synthetic corpus seed, monthly agency workflow run, approval of a generated task, run event/evaluation retrieval, and DOCX export.
+- Smoke test evidence saved to `evidence/tests/agency-workforce-smoke-2026-05-25.json`.
+
+Next actions:
+- Commit changes.
+- Deploy backend to Railway so production runs migration `002_agency_workspace.sql`.
+- Deploy frontend to Vercel.
+- Verify production health and public frontend.

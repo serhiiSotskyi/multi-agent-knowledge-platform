@@ -7,45 +7,72 @@ from psycopg.types.json import Jsonb
 
 from app.core.config import get_settings
 from app.db.database import run_one, run_query
+from app.services.agency import (
+    ensure_agency_defaults,
+    evaluate_run,
+    log_action_event,
+    propose_campaign_update,
+    propose_monthly_actions,
+    workspace_context,
+)
 from app.services.provider_keys import get_provider_key
 from app.services.vector_store import retrieve
 
 
 DEFAULT_AGENTS = [
     {
-        "name": "Research Agent",
-        "role": "Enterprise knowledge researcher",
-        "goal": "Retrieve relevant source material and summarize what the knowledge base says.",
+        "name": "Account Manager Agent",
+        "role": "Client context and delivery owner",
+        "goal": "Translate client goals, constraints, and stakeholder expectations into a clear agency work brief.",
         "tools": ["rag_retrieve"],
     },
     {
         "name": "PPC Strategist",
         "role": "Paid search specialist",
-        "goal": "Analyze PPC implications, risks, campaign setup issues, and performance questions.",
+        "goal": "Find PPC budget, keyword, negative keyword, ad copy, and landing-page actions that can improve account performance.",
         "tools": ["rag_retrieve"],
     },
     {
-        "name": "SEO Analyst",
+        "name": "SEO Strategist",
         "role": "SEO specialist",
-        "goal": "Analyze technical SEO, content, rankings, and organic growth recommendations.",
+        "goal": "Identify technical SEO, content, search-intent, and organic growth actions for the next delivery sprint.",
         "tools": ["rag_retrieve"],
     },
     {
-        "name": "Report Writer",
-        "role": "Business report writer",
-        "goal": "Turn agent findings into a concise business-ready answer or report.",
+        "name": "Data Analyst Agent",
+        "role": "Marketing performance analyst",
+        "goal": "Detect trends, anomalies, weak spots, and evidence-backed priorities from synthetic PPC/SEO performance data.",
         "tools": ["rag_retrieve"],
     },
     {
-        "name": "Verifier Agent",
-        "role": "Grounding and citation reviewer",
-        "goal": "Check whether the final answer is supported by retrieved source snippets.",
+        "name": "Content Strategist Agent",
+        "role": "Search content strategist",
+        "goal": "Turn SEO and PPC findings into briefs, content priorities, landing-page ideas, and messaging recommendations.",
+        "tools": ["rag_retrieve"],
+    },
+    {
+        "name": "QA/Compliance Agent",
+        "role": "Grounding, brand, and risk reviewer",
+        "goal": "Check whether recommendations are grounded, clear, risk-aware, and safe for a client-facing agency workflow.",
+        "tools": ["rag_retrieve"],
+    },
+    {
+        "name": "Workflow Supervisor Agent",
+        "role": "Agency operations supervisor",
+        "goal": "Resolve conflicts between specialists and decide the final execution priorities for the agency team.",
+        "tools": ["rag_retrieve"],
+    },
+    {
+        "name": "Reporting Agent",
+        "role": "Client-ready report writer",
+        "goal": "Create a concise monthly operations report with approved-style priorities, evidence, risks, and next steps.",
         "tools": ["rag_retrieve"],
     },
 ]
 
 
 def bootstrap_defaults(user_id: str) -> dict:
+    ensure_agency_defaults(user_id)
     existing = run_query("select id, name from agents where user_id = %(user_id)s", {"user_id": user_id})
     agent_ids: dict[str, str] = {row["name"]: str(row["id"]) for row in existing}
     settings = get_settings()
@@ -71,23 +98,72 @@ def bootstrap_defaults(user_id: str) -> dict:
         agent_ids[agent["name"]] = agent_id
 
     workflow_exists = run_one(
-        "select id from workflows where user_id = %(user_id)s and name = 'Cooperative Knowledge Report'",
+        "select id from workflows where user_id = %(user_id)s and name = 'Monthly PPC/SEO Operations Review'",
         {"user_id": user_id},
     )
     if not workflow_exists:
-        ordered = ["Research Agent", "PPC Strategist", "SEO Analyst", "Report Writer", "Verifier Agent"]
-        nodes = [
+        ordered = [
+            "Account Manager Agent",
+            "Data Analyst Agent",
+            "SEO Strategist",
+            "PPC Strategist",
+            "Content Strategist Agent",
+            "QA/Compliance Agent",
+            "Workflow Supervisor Agent",
+            "Reporting Agent",
+        ]
+        nodes = [{
+            "id": "retrieve-agency-context",
+            "type": "default",
+            "position": {"x": 40, "y": 70},
+            "data": {"label": "Retrieve agency knowledge", "kind": "retrieve"},
+        }]
+        nodes.extend([
             {
                 "id": agent_ids[name],
-                "type": "agent",
-                "position": {"x": index * 230, "y": 120 if index % 2 else 40},
-                "data": {"label": name},
+                "type": "default",
+                "position": {"x": 260 + index * 220, "y": 120 if index % 2 else 30},
+                "data": {"label": name, "kind": "agent"},
             }
             for index, name in enumerate(ordered)
+        ])
+        execution_nodes = [
+            {
+                "id": "queue-monthly-actions",
+                "type": "default",
+                "position": {"x": 260 + len(ordered) * 220, "y": 30},
+                "data": {"label": "Queue approval-gated tasks", "kind": "create_task"},
+            },
+            {
+                "id": "queue-campaign-update",
+                "type": "default",
+                "position": {"x": 480 + len(ordered) * 220, "y": 120},
+                "data": {"label": "Queue campaign update", "kind": "update_campaign"},
+            },
+            {
+                "id": "approval-gate",
+                "type": "default",
+                "position": {"x": 700 + len(ordered) * 220, "y": 30},
+                "data": {"label": "Human approval gate", "kind": "approval"},
+            },
+            {
+                "id": "evaluate-run",
+                "type": "default",
+                "position": {"x": 920 + len(ordered) * 220, "y": 120},
+                "data": {"label": "Evaluate run", "kind": "evaluate"},
+            },
+            {
+                "id": "export-docx",
+                "type": "default",
+                "position": {"x": 1140 + len(ordered) * 220, "y": 30},
+                "data": {"label": "DOCX report available", "kind": "export_docx"},
+            },
         ]
+        nodes.extend(execution_nodes)
+        ordered_node_ids = ["retrieve-agency-context", *[agent_ids[name] for name in ordered], *[node["id"] for node in execution_nodes]]
         edges = [
-            {"id": f"e-{agent_ids[a]}-{agent_ids[b]}", "source": agent_ids[a], "target": agent_ids[b]}
-            for a, b in zip(ordered, ordered[1:], strict=False)
+            {"id": f"e-{source}-{target}", "source": source, "target": target, "animated": True}
+            for source, target in zip(ordered_node_ids, ordered_node_ids[1:], strict=False)
         ]
         run_query(
             """
@@ -97,8 +173,8 @@ def bootstrap_defaults(user_id: str) -> dict:
             {
                 "id": str(uuid4()),
                 "user_id": user_id,
-                "name": "Cooperative Knowledge Report",
-                "description": "Research, PPC, SEO, writing, and verification agents cooperate on a source-grounded answer.",
+                "name": "Monthly PPC/SEO Operations Review",
+                "description": "A vertical agency workforce reviews client context, PPC/SEO evidence, proposes approval-gated actions, and produces a client-ready report.",
                 "nodes": Jsonb(nodes),
                 "edges": Jsonb(edges),
             },
@@ -106,7 +182,7 @@ def bootstrap_defaults(user_id: str) -> dict:
     return {"ok": True}
 
 
-def ordered_agent_ids(nodes: list[dict], edges: list[dict]) -> list[str]:
+def ordered_node_ids(nodes: list[dict], edges: list[dict]) -> list[str]:
     node_ids = [node["id"] for node in nodes]
     incoming: dict[str, int] = {node_id: 0 for node_id in node_ids}
     outgoing: dict[str, list[str]] = defaultdict(list)
@@ -128,6 +204,14 @@ def ordered_agent_ids(nodes: list[dict], edges: list[dict]) -> list[str]:
     return result if len(result) == len(node_ids) else node_ids
 
 
+def _node_kind(node: dict, agent_by_id: dict[str, dict]) -> str:
+    data = node.get("data") or {}
+    kind = data.get("kind") or node.get("type")
+    if node.get("id") in agent_by_id:
+        return "agent"
+    return kind or "agent"
+
+
 async def run_workflow(user_id: str, workflow_id: str, prompt: str) -> dict:
     api_key = get_provider_key(user_id, "anthropic")
     if not api_key:
@@ -140,33 +224,111 @@ async def run_workflow(user_id: str, workflow_id: str, prompt: str) -> dict:
     if not workflow:
         raise HTTPException(status_code=404, detail="Workflow not found")
 
-    agent_ids = ordered_agent_ids(workflow["nodes"], workflow["edges"])
+    run_id = str(uuid4())
+    run_query(
+        """
+        insert into runs (id, user_id, workflow_id, prompt, output, citations, trace)
+        values (%(id)s, %(user_id)s, %(workflow_id)s, %(prompt)s, 'Run in progress.', '[]'::jsonb, '[]'::jsonb)
+        """,
+        {"id": run_id, "user_id": user_id, "workflow_id": workflow_id, "prompt": prompt},
+    )
+
+    node_ids = ordered_node_ids(workflow["nodes"], workflow["edges"])
+    node_by_id = {node["id"]: node for node in workflow["nodes"]}
+    agent_ids = [node_id for node_id in node_ids if run_one(
+        "select id from agents where id::text = %(id)s and user_id = %(user_id)s",
+        {"id": node_id, "user_id": user_id},
+    )]
     agents = run_query(
         "select * from agents where user_id = %(user_id)s and id::text = any(%(ids)s)",
         {"user_id": user_id, "ids": agent_ids},
     )
     agent_by_id = {str(agent["id"]): agent for agent in agents}
-    citations = retrieve(user_id, prompt, limit=6)
-    context = "\n\n".join(
-        f"[{idx + 1}] {item['filename']} chunk {item['chunk_index']}:\n{item['content']}"
-        for idx, item in enumerate(citations)
-    )
+    agency_context, _, _, _ = workspace_context(user_id, prompt)
+    citations: list[dict] = []
+    context = ""
 
     client = AsyncAnthropic(api_key=api_key)
     running_notes = ""
     trace: list[dict] = []
-    for agent_id in agent_ids:
-        agent = agent_by_id.get(agent_id)
-        if not agent:
+    proposed_actions = 0
+    evaluation = None
+    for node_id in node_ids:
+        node = node_by_id.get(node_id, {"id": node_id, "data": {}})
+        kind = _node_kind(node, agent_by_id)
+        if kind == "retrieve":
+            citations = retrieve(user_id, prompt, limit=8)
+            context = "\n\n".join(
+                f"[{idx + 1}] {item['filename']} chunk {item['chunk_index']}:\n{item['content']}"
+                for idx, item in enumerate(citations)
+            )
+            log_action_event(
+                user_id,
+                run_id,
+                workflow_id,
+                "retrieve",
+                "Retrieved agency knowledge from vector store",
+                {"citation_count": len(citations), "filenames": sorted({item["filename"] for item in citations})},
+            )
             continue
+
+        if kind == "create_task":
+            proposals = propose_monthly_actions(user_id, run_id, workflow_id, prompt, running_notes)
+            proposed_actions += len(proposals)
+            running_notes += f"\n\n## Internal Actions\nQueued {len(proposals)} approval-gated agency tasks."
+            continue
+
+        if kind == "update_campaign":
+            approval = propose_campaign_update(user_id, run_id, workflow_id, prompt, running_notes)
+            proposed_actions += 1 if approval else 0
+            running_notes += "\n\n## Internal Actions\nQueued a campaign note update for approval."
+            continue
+
+        if kind == "approval":
+            log_action_event(
+                user_id,
+                run_id,
+                workflow_id,
+                "approval_gate",
+                "Workflow paused persistent changes behind human approval",
+                {"pending_actions": proposed_actions},
+            )
+            continue
+
+        if kind == "evaluate":
+            continue
+
+        if kind == "export_docx":
+            log_action_event(
+                user_id,
+                run_id,
+                workflow_id,
+                "export_docx",
+                "Client-ready DOCX report is available for this run",
+                {"download_path": f"/api/runs/{run_id}/docx"},
+            )
+            continue
+
+        agent = agent_by_id.get(node_id)
+        if not agent:
+            log_action_event(user_id, run_id, workflow_id, "skip", f"Skipped unsupported workflow node: {node_id}", {"kind": kind})
+            continue
+        if not context:
+            citations = retrieve(user_id, prompt, limit=8)
+            context = "\n\n".join(
+                f"[{idx + 1}] {item['filename']} chunk {item['chunk_index']}:\n{item['content']}"
+                for idx, item in enumerate(citations)
+            )
         system = (
             f"You are {agent['name']}. Role: {agent['role']}.\n"
             f"Goal: {agent['goal']}\n"
-            "Use only the provided source context and previous agent notes. "
-            "If evidence is missing, say what is missing. Keep output concise and actionable."
+            "You are part of an AI workforce for a PPC/SEO agency. "
+            "Use the agency workspace, retrieved source context, and previous agent notes. "
+            "If evidence is missing, say what is missing. Keep output concise, actionable, and suitable for approval-gated execution."
         )
         user_message = (
             f"User request:\n{prompt}\n\n"
+            f"Agency workspace:\n{agency_context}\n\n"
             f"Retrieved source context:\n{context or 'No source context found.'}\n\n"
             f"Previous agent notes:\n{running_notes or 'None yet.'}"
         )
@@ -178,24 +340,50 @@ async def run_workflow(user_id: str, workflow_id: str, prompt: str) -> dict:
             messages=[{"role": "user", "content": user_message}],
         )
         text = "\n".join(block.text for block in response.content if getattr(block, "type", "") == "text")
-        trace.append({"agent_id": agent_id, "agent_name": agent["name"], "output": text})
+        trace.append({"agent_id": node_id, "agent_name": agent["name"], "output": text})
+        log_action_event(
+            user_id,
+            run_id,
+            workflow_id,
+            "agent_output",
+            f"{agent['name']} completed its step",
+            {"output_preview": text[:900]},
+            agent_id=node_id,
+        )
         running_notes += f"\n\n## {agent['name']}\n{text}"
 
     output = trace[-1]["output"] if trace else "No agents were available to run."
-    run_id = str(uuid4())
+    evaluation = evaluate_run(user_id, run_id, citations, trace, output, proposed_actions)
+    log_action_event(
+        user_id,
+        run_id,
+        workflow_id,
+        "evaluation",
+        "Run evaluation completed",
+        {"overall_score": evaluation["overall_score"], "proposed_actions": proposed_actions},
+    )
     run_query(
         """
-        insert into runs (id, user_id, workflow_id, prompt, output, citations, trace)
-        values (%(id)s, %(user_id)s, %(workflow_id)s, %(prompt)s, %(output)s, %(citations)s::jsonb, %(trace)s::jsonb)
+        update runs
+        set output = %(output)s, citations = %(citations)s::jsonb, trace = %(trace)s::jsonb
+        where id = %(id)s and user_id = %(user_id)s
         """,
         {
             "id": run_id,
             "user_id": user_id,
-            "workflow_id": workflow_id,
-            "prompt": prompt,
             "output": output,
             "citations": Jsonb(citations),
             "trace": Jsonb(trace),
         },
     )
-    return {"id": run_id, "output": output, "citations": citations, "trace": trace}
+    events = run_query("select * from action_events where run_id = %(run_id)s order by created_at", {"run_id": run_id})
+    approvals = run_query("select * from approvals where run_id = %(run_id)s order by created_at", {"run_id": run_id})
+    return {
+        "id": run_id,
+        "output": output,
+        "citations": citations,
+        "trace": trace,
+        "events": events,
+        "approvals": approvals,
+        "evaluation": evaluation,
+    }
