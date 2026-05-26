@@ -206,3 +206,16 @@ Final deployment status:
 - Backend deployed to Railway deployment `518c2fb6-f353-4872-8d63-4ec1e5d39e02`.
 - Frontend deployed to Vercel deployment `dpl_F5jpCxF49VXYHGv7coftJY5P7TaS` and aliased to `https://modelweave-six.vercel.app`.
 - Production checks passed: frontend HTTP 200, backend health OK, deployed metadata includes "AI workforce platform for PPC and SEO agency operations", and deployed JS contains Clients, Campaigns, Approvals, Tasks, and Agency Runs tabs.
+
+### 2026-05-26
+
+Issue:
+- Production "Load synthetic PPC/SEO corpus" returned HTTP 500.
+- Railway logs showed `IndexError: 4` in `seed_synthetic_documents`; the endpoint assumed a local path depth that does not exist in Railway's `/app/app/api/routes.py` layout.
+
+Fix in progress:
+- Replaced fixed parent-index lookup with `synthetic_corpus_dir()`, which searches parent directories for both `data/synthetic-corpus` and `backend/data/synthetic-corpus`.
+
+Checks run:
+- `backend/.venv/bin/python -m compileall backend/app`
+- `PYTHONPATH=backend backend/.venv/bin/python - <<'PY' ... synthetic_corpus_dir() ...`

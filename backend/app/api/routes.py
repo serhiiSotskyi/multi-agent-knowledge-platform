@@ -87,6 +87,18 @@ class DecisionIn(BaseModel):
     note: str = ""
 
 
+def synthetic_corpus_dir() -> Path:
+    current = Path(__file__).resolve()
+    for parent in current.parents:
+        for candidate in (
+            parent / "data" / "synthetic-corpus",
+            parent / "backend" / "data" / "synthetic-corpus",
+        ):
+            if candidate.exists():
+                return candidate
+    raise HTTPException(status_code=404, detail="Synthetic corpus directory not found")
+
+
 @router.get("/health")
 def health() -> dict:
     return {"ok": True, "app": get_settings().app_name}
@@ -421,11 +433,7 @@ async def upload_document(file: UploadFile = File(...), user: CurrentUser = Depe
 
 @router.post("/documents/seed-synthetic")
 def seed_synthetic_documents(user: CurrentUser = Depends(get_current_user)) -> dict:
-    corpus_dir = Path(__file__).resolve().parents[3] / "data" / "synthetic-corpus"
-    if not corpus_dir.exists():
-        corpus_dir = Path(__file__).resolve().parents[4] / "data" / "synthetic-corpus"
-    if not corpus_dir.exists():
-        raise HTTPException(status_code=404, detail="Synthetic corpus directory not found")
+    corpus_dir = synthetic_corpus_dir()
 
     indexed = 0
     for path in sorted(corpus_dir.glob("*.md")):
