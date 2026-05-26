@@ -1,0 +1,10 @@
+{
+  "ok": true,
+  "email": "modelweave-prod-doc-manage-1779795439423@maildrop.cc",
+  "seeded_documents": 16,
+  "opened_content_chars": 690,
+  "renamed_to": "prod-renamed-service_catalog.md",
+  "delete_status": 200,
+  "missing_after_delete_status": 404,
+  "userId": "25a7039f-79e1-41e2-848c-6a16b673e18b"
+}

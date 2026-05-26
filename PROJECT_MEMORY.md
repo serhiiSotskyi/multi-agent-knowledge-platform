@@ -239,3 +239,10 @@ Checks run:
 - `npm run build` from `frontend/`
 - Authenticated document-management smoke test: seed 16 documents, open one document, rename it, delete it, confirm GET returns 404 after deletion.
 - Evidence saved to `evidence/tests/document-management-smoke-2026-05-26.json`.
+
+Production status:
+- Document management changes committed and pushed in `7527dca` (`Add document management controls`).
+- Backend deployed to Railway deployment `006ab577-d40c-4636-b030-f9ba0bc1b651`.
+- Frontend deployed to Vercel deployment `dpl_H2Nc3uNaaEvY3nSwumyu3QrA3gnV` and aliased to `https://modelweave-six.vercel.app`.
+- Authenticated production document-management smoke test passed: seed 16 documents, open one document, rename metadata, delete it, and confirm GET returns 404 after deletion.
+- Evidence saved to `evidence/tests/document-management-production-2026-05-26.json`.
