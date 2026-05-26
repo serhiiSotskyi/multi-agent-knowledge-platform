@@ -273,3 +273,19 @@ Formula formatting correction:
 - Converted all 15 formula paragraphs in `ModelWeave_Diploma_Thesis_EN.docx` from styled text to native Word OMML equation objects.
 - Re-rendered the document and visually checked the mathematical model pages; equations now display with Word math formatting, including subscripts, superscripts, fractions, summation, and centered equation layout.
 - Removed temporary rendered QA images after inspection.
+
+Ukrainian thesis copy task:
+- Started creating a Ukrainian copy of `ModelWeave_Diploma_Thesis_EN.docx`.
+- Target output: `ModelWeave_Diploma_Thesis_UA.docx`.
+- Requirements: preserve the original layout, screenshots, tables, and native OMML equations; translate textual paragraphs and table cells to Ukrainian; keep URLs, API paths, code identifiers, filenames, model/product names, and reference metadata usable.
+- Created `ModelWeave_Diploma_Thesis_UA.docx` from the English thesis and translated the document body/table cells into Ukrainian.
+- Cleaned up remaining English-heavy table cells while preserving product names, API routes, file paths, UI tab labels, and English-language reference metadata.
+- Current verification: DOCX structure check shows 235 paragraphs, 15 tables, and 0 formula paragraphs with raw visible text, so Word equation objects were preserved.
+- Rendered the Ukrainian copy to 28 page PNGs and a PDF under `evidence/rendered-thesis-ua/` for visual QA.
+- Visually checked representative pages: title page, mathematical model/equations, backend and agent tables, evaluation appendix, references/API appendix, and final evidence appendix.
+- Final structural check: 235 paragraphs, 15 tables, 11 image relationships, and 0 formula paragraphs with visible raw text.
+
+Commands or checks run:
+- `render_docx.py ModelWeave_Diploma_Thesis_UA.docx --output_dir evidence/rendered-thesis-ua --emit_pdf`
+- Python DOCX structure check for paragraphs, tables, images, and formula paragraph text.
+- English-leftover scan over Ukrainian DOCX paragraphs and table cells.
