@@ -33,6 +33,16 @@ def ensure_collections() -> None:
     except Exception as exc:
         if "already exists" not in str(exc).lower():
             raise
+    try:
+        client.create_payload_index(
+            collection_name=settings.qdrant_collection_documents,
+            field_name="document_id",
+            field_schema=PayloadSchemaType.KEYWORD,
+            wait=True,
+        )
+    except Exception as exc:
+        if "already exists" not in str(exc).lower():
+            raise
 
 
 def index_chunks(user_id: str, document_id: str, filename: str, chunks: list[str]) -> list[str]:
@@ -57,6 +67,34 @@ def index_chunks(user_id: str, document_id: str, filename: str, chunks: list[str
     if points:
         client.upsert(collection_name=settings.qdrant_collection_documents, points=points)
     return point_ids
+
+
+def document_filter(user_id: str, document_id: str) -> Filter:
+    return Filter(
+        must=[
+            FieldCondition(key="user_id", match=MatchValue(value=user_id)),
+            FieldCondition(key="document_id", match=MatchValue(value=document_id)),
+        ]
+    )
+
+
+def delete_document_vectors(user_id: str, document_id: str) -> None:
+    settings = get_settings()
+    get_qdrant().delete(
+        collection_name=settings.qdrant_collection_documents,
+        points_selector=document_filter(user_id, document_id),
+        wait=True,
+    )
+
+
+def update_document_vector_filename(user_id: str, document_id: str, filename: str) -> None:
+    settings = get_settings()
+    get_qdrant().set_payload(
+        collection_name=settings.qdrant_collection_documents,
+        points=document_filter(user_id, document_id),
+        payload={"filename": filename},
+        wait=True,
+    )
 
 
 def retrieve(user_id: str, query: str, limit: int = 5) -> list[dict]:

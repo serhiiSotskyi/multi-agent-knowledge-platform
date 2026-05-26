@@ -226,3 +226,16 @@ Resolution:
 - Retry Railway deployment succeeded: `7ee8ee8a-f398-4788-b6c2-0a5d76468d54`.
 - Authenticated production test passed against `https://api-production-e70a9.up.railway.app/api/documents/seed-synthetic` with response `{"indexed_documents":16}`.
 - Evidence saved to `evidence/tests/seed-synthetic-production-2026-05-26.json`.
+
+Document management update:
+- Added backend document management endpoints for opening indexed document content, updating document metadata, and deleting documents.
+- Document delete removes the Postgres document/chunks and deletes matching Qdrant vectors.
+- Document rename updates Postgres document metadata, chunk metadata, and Qdrant vector payload filename.
+- Added frontend Documents tab controls for Open, Save metadata, and Delete.
+- Current limitation: opening a document shows reconstructed indexed chunk text, not the original uploaded binary file.
+
+Checks run:
+- `backend/.venv/bin/python -m compileall backend/app`
+- `npm run build` from `frontend/`
+- Authenticated document-management smoke test: seed 16 documents, open one document, rename it, delete it, confirm GET returns 404 after deletion.
+- Evidence saved to `evidence/tests/document-management-smoke-2026-05-26.json`.

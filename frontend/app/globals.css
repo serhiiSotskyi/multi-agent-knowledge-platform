@@ -207,6 +207,11 @@ textarea {
   background: #fbfdff;
 }
 
+.document-preview {
+  max-height: 560px;
+  overflow: auto;
+}
+
 .auth-page {
   min-height: 100vh;
   display: grid;

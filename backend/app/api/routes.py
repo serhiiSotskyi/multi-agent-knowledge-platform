@@ -14,7 +14,7 @@ from app.services.agents import bootstrap_defaults, run_workflow
 from app.services.documents import chunk_text, extract_text
 from app.services.provider_keys import has_provider_key, save_provider_key
 from app.services.reports import build_run_docx
-from app.services.vector_store import index_chunks
+from app.services.vector_store import delete_document_vectors, index_chunks, update_document_vector_filename
 
 router = APIRouter()
 
@@ -85,6 +85,12 @@ class ApprovalIn(BaseModel):
 
 class DecisionIn(BaseModel):
     note: str = ""
+
+
+class DocumentUpdateIn(BaseModel):
+    filename: str
+    content_type: str = ""
+    status: str = "indexed"
 
 
 def synthetic_corpus_dir() -> Path:
@@ -390,6 +396,75 @@ def update_workflow(workflow_id: str, body: WorkflowIn, user: CurrentUser = Depe
 @router.get("/documents")
 def list_documents(user: CurrentUser = Depends(get_current_user)) -> list[dict]:
     return run_query("select * from documents where user_id = %(user_id)s order by created_at desc", {"user_id": user.id})
+
+
+@router.get("/documents/{document_id}")
+def get_document(document_id: str, user: CurrentUser = Depends(get_current_user)) -> dict:
+    document = run_one(
+        "select * from documents where id = %(id)s and user_id = %(user_id)s",
+        {"id": document_id, "user_id": user.id},
+    )
+    if not document:
+        raise HTTPException(status_code=404, detail="Document not found")
+    chunks = run_query(
+        """
+        select id, chunk_index, content, metadata, created_at
+        from document_chunks
+        where document_id = %(document_id)s and user_id = %(user_id)s
+        order by chunk_index
+        """,
+        {"document_id": document_id, "user_id": user.id},
+    )
+    document["chunks"] = chunks
+    document["content"] = "\n\n".join(chunk["content"] for chunk in chunks)
+    return document
+
+
+@router.put("/documents/{document_id}")
+def update_document(document_id: str, body: DocumentUpdateIn, user: CurrentUser = Depends(get_current_user)) -> dict:
+    document = run_one(
+        "select * from documents where id = %(id)s and user_id = %(user_id)s",
+        {"id": document_id, "user_id": user.id},
+    )
+    if not document:
+        raise HTTPException(status_code=404, detail="Document not found")
+    update_document_vector_filename(user.id, document_id, body.filename)
+    run_query(
+        """
+        update documents
+        set filename=%(filename)s, content_type=%(content_type)s, status=%(status)s
+        where id=%(id)s and user_id=%(user_id)s
+        """,
+        {
+            "id": document_id,
+            "user_id": user.id,
+            "filename": body.filename,
+            "content_type": body.content_type or document["content_type"],
+            "status": body.status,
+        },
+    )
+    run_query(
+        """
+        update document_chunks
+        set metadata = jsonb_set(metadata, '{filename}', to_jsonb(%(filename)s::text), true)
+        where document_id = %(document_id)s and user_id = %(user_id)s
+        """,
+        {"document_id": document_id, "user_id": user.id, "filename": body.filename},
+    )
+    return run_one("select * from documents where id = %(id)s", {"id": document_id})
+
+
+@router.delete("/documents/{document_id}")
+def delete_document(document_id: str, user: CurrentUser = Depends(get_current_user)) -> dict:
+    document = run_one(
+        "select id, filename from documents where id = %(id)s and user_id = %(user_id)s",
+        {"id": document_id, "user_id": user.id},
+    )
+    if not document:
+        raise HTTPException(status_code=404, detail="Document not found")
+    delete_document_vectors(user.id, document_id)
+    run_query("delete from documents where id = %(id)s and user_id = %(user_id)s", {"id": document_id, "user_id": user.id})
+    return {"ok": True, "id": document_id, "filename": document["filename"]}
 
 
 @router.post("/documents")

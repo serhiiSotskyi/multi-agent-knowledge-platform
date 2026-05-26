@@ -19,13 +19,16 @@ import {
   ClipboardCheck,
   Database,
   Download,
+  Eye,
   FileText,
   GitBranch,
   KeyRound,
   ListChecks,
   LogOut,
+  Save,
   Play,
   RefreshCw,
+  Trash2,
   Upload,
   Users,
   XCircle,
@@ -127,8 +130,14 @@ type DocumentRow = {
   id: string;
   filename: string;
   content_type: string;
+  status: string;
   chunk_count: number;
   created_at: string;
+};
+
+type DocumentDetail = DocumentRow & {
+  content: string;
+  chunks: Array<{ id: string; chunk_index: number; content: string; metadata: Record<string, unknown>; created_at: string }>;
 };
 
 type RunRow = {
@@ -473,6 +482,8 @@ function DocumentsPanel({ documents, refresh, setNotice }: {
   setNotice: (message: string) => void;
 }) {
   const [file, setFile] = useState<File | null>(null);
+  const [selected, setSelected] = useState<DocumentDetail | null>(null);
+  const [edit, setEdit] = useState({ filename: "", content_type: "", status: "indexed" });
 
   async function upload() {
     if (!file) return;
@@ -490,6 +501,32 @@ function DocumentsPanel({ documents, refresh, setNotice }: {
     setNotice(`Synthetic corpus loaded: ${result.indexed_documents} new documents.`);
   }
 
+  async function openDocument(documentId: string) {
+    const detail = await apiFetch<DocumentDetail>(`/documents/${documentId}`);
+    setSelected(detail);
+    setEdit({ filename: detail.filename, content_type: detail.content_type, status: detail.status });
+  }
+
+  async function saveDocument() {
+    if (!selected) return;
+    const updated = await apiFetch<DocumentRow>(`/documents/${selected.id}`, {
+      method: "PUT",
+      body: JSON.stringify(edit),
+    });
+    await refresh();
+    await openDocument(updated.id);
+    setNotice("Document metadata updated.");
+  }
+
+  async function removeDocument(documentId: string) {
+    const confirmed = window.confirm("Delete this document from Postgres and Qdrant? This cannot be undone.");
+    if (!confirmed) return;
+    await apiFetch(`/documents/${documentId}`, { method: "DELETE" });
+    if (selected?.id === documentId) setSelected(null);
+    await refresh();
+    setNotice("Document deleted from database and vector index.");
+  }
+
   return (
     <section className="grid">
       <div className="panel row">
@@ -497,16 +534,44 @@ function DocumentsPanel({ documents, refresh, setNotice }: {
         <button className="primary" disabled={!file} onClick={upload}><Upload size={16} /> Upload</button>
         <button onClick={seed}><Database size={16} /> Load synthetic PPC/SEO corpus</button>
       </div>
-      <div className="panel">
-        <h2>Indexed documents</h2>
-        <table className="table">
-          <thead><tr><th>Name</th><th>Type</th><th>Chunks</th><th>Created</th></tr></thead>
-          <tbody>
-            {documents.map((doc) => (
-              <tr key={doc.id}><td>{doc.filename}</td><td>{doc.content_type}</td><td>{doc.chunk_count}</td><td>{new Date(doc.created_at).toLocaleString()}</td></tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="grid two">
+        <div className="panel">
+          <h2>Indexed documents</h2>
+          <table className="table">
+            <thead><tr><th>Name</th><th>Type</th><th>Chunks</th><th>Created</th><th>Manage</th></tr></thead>
+            <tbody>
+              {documents.map((doc) => (
+                <tr key={doc.id}>
+                  <td><strong>{doc.filename}</strong><br /><span className="small muted">{doc.status}</span></td>
+                  <td>{doc.content_type}</td>
+                  <td>{doc.chunk_count}</td>
+                  <td>{new Date(doc.created_at).toLocaleString()}</td>
+                  <td>
+                    <div className="row">
+                      <button onClick={() => openDocument(doc.id)}><Eye size={16} /> Open</button>
+                      <button onClick={() => removeDocument(doc.id)}><Trash2 size={16} /> Delete</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="panel stack">
+          <h2>{selected ? "Document details" : "Open a document"}</h2>
+          {selected ? (
+            <>
+              <label className="stack small">Filename<input value={edit.filename} onChange={(event) => setEdit({ ...edit, filename: event.target.value })} /></label>
+              <label className="stack small">Content type<input value={edit.content_type} onChange={(event) => setEdit({ ...edit, content_type: event.target.value })} /></label>
+              <label className="stack small">Status<input value={edit.status} onChange={(event) => setEdit({ ...edit, status: event.target.value })} /></label>
+              <button className="primary" disabled={!edit.filename} onClick={saveDocument}><Save size={16} /> Save metadata</button>
+              <p className="small muted">{selected.chunk_count} indexed chunks. This view shows reconstructed indexed text, not the original uploaded file.</p>
+              <div className="output document-preview">{selected.content || "No indexed content available."}</div>
+            </>
+          ) : (
+            <p className="muted">Use Open to read indexed document content, rename a document, update metadata, or delete it from the knowledge base.</p>
+          )}
+        </div>
       </div>
     </section>
   );
