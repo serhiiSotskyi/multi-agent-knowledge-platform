@@ -267,3 +267,9 @@ Diploma writing result:
 Open items:
 - Fill formal title-page placeholders for institute/faculty, department, group, specialty, and exact student metadata before official submission.
 - If the university requires a longer page count, expand the theory review, occupational safety/economic justification, and implementation/testing chapters.
+
+Formula formatting correction:
+- User flagged that formulas looked like raw text.
+- Converted all 15 formula paragraphs in `ModelWeave_Diploma_Thesis_EN.docx` from styled text to native Word OMML equation objects.
+- Re-rendered the document and visually checked the mathematical model pages; equations now display with Word math formatting, including subscripts, superscripts, fractions, summation, and centered equation layout.
+- Removed temporary rendered QA images after inspection.
