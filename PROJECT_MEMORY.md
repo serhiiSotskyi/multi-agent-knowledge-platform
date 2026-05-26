@@ -246,3 +246,24 @@ Production status:
 - Frontend deployed to Vercel deployment `dpl_H2Nc3uNaaEvY3nSwumyu3QrA3gnV` and aliased to `https://modelweave-six.vercel.app`.
 - Authenticated production document-management smoke test passed: seed 16 documents, open one document, rename metadata, delete it, and confirm GET returns 404 after deletion.
 - Evidence saved to `evidence/tests/document-management-production-2026-05-26.json`.
+
+Diploma writing task:
+- Started generating the English diploma thesis DOCX for the approved title.
+- Planned contents: formal front matter, abstract, introduction, technology review, mathematical RAG/workflow model, service-oriented architecture, implementation, testing/evaluation, deployment, screenshots, charts, tables, references, and appendices.
+- Sources must be English-language only and tied to fresh official documentation or established research papers.
+- Visual evidence will use generated architecture/charts plus screenshots of the deployed ModelWeave application.
+- Output target: `ModelWeave_Diploma_Thesis_EN.docx`.
+
+Diploma writing result:
+- Generated `ModelWeave_Diploma_Thesis_EN.docx` as an English thesis draft for the approved title.
+- Included bilingual abstract material, contents, abbreviations, introduction, literature/technology review, problem statement, mathematical model, service-oriented architecture, implementation, testing/evaluation, deployment, commercial relevance, limitations, detailed design discussion, conclusions, references, and appendices.
+- Added formulas for corpus/chunk representation, embeddings, cosine similarity, top-k retrieval, workflow graphs, evaluation, approval state, storage, and run complexity.
+- Added diagrams/charts under `evidence/figures/` and screenshots under `evidence/screenshots/`.
+- Captured production demo state in `evidence/tests/thesis-demo-production-state-2026-05-26.json`.
+- Rendered the DOCX to page PNGs for visual QA; first render exposed oversized full-page screenshots, then cropped screenshots were inserted and the second render passed visual inspection.
+- Final draft length after expansion: approximately 5,032 words and 26 rendered pages.
+- Temporary screenshot/demo users and the local credential file were deleted after screenshots were captured.
+
+Open items:
+- Fill formal title-page placeholders for institute/faculty, department, group, specialty, and exact student metadata before official submission.
+- If the university requires a longer page count, expand the theory review, occupational safety/economic justification, and implementation/testing chapters.

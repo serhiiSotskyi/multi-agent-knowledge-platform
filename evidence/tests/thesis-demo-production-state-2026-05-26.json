@@ -1,0 +1,602 @@
+{
+  "runs": [
+    {
+      "id": "89a8293c-d87d-4874-b69a-f7387f389222",
+      "workflow_id": "fd96c1a6-318f-4686-911d-409cfa35b63a",
+      "workflow_name": "Monthly PPC/SEO Operations Review",
+      "prompt": "Prepare next month\u2019s PPC and SEO execution plan for Harbor Homeware.",
+      "output": "# Harbor Homeware \u2014 Next Month PPC & SEO Execution Plan\n**Prepared by:** Reporting Agent\n**Reviewed by:** Workflow Supervisor Agent (approved), QA/Compliance Agent (pass)\n**Period:** Next calendar month\n**Status:** Approved for execution \u2014 subject to mandatory pre-launch gates\n**Distribution:** Client stakeholders and internal delivery team\n\n---\n\n## Executive Summary\n\nThis plan covers PPC and SEO execution for Harbor Homeware across the coming month. Three commercial goals drive all activity: reduce wasted paid search spend, grow non-branded organic traffic, and improve monthly reporting quality.\n\n**Month 1 is a foundation month.** No live performance data exists for this account. Every recommendation is grounded in structural signals from agency documents and the client profile. Optimisation decisions will begin in Month 2 once baselines are established.\n\nFive pre-launch gates must be cleared before any live spend is activated or on-page changes are published. The Client Success Manager must chase all outstanding access items in Week 1. Until gates are cleared, PPC campaigns remain in draft/paused state.\n\n---\n\n## Pre-Launch Gates \u2014 Hard Stops\n\nNothing goes live until all applicable gates are resolved.\n\n| # | Gate | Owner | Consequence if Skipped |\n|---|---|---|---|\n| G1 | Conversion tracking verified on all primary conversion actions | PPC Lead + Analytics Specialist | Live spend is unattributable; CPA optimisation impossible *(mw-agency-003)* |\n| G2 | Primary conversion actions confirmed by client | Client Success Manager | Campaign goal and bidding strategy cannot be correctly configured *(mw-agency-002)* |\n| G3 | Analytics access granted | Analytics Specialist | No performance baseline; reporting cannot meet policy requirements *(mw-agency-005)* |\n| G4 | CMS access level confirmed | Client Success Manager | All SEO on-page fixes and content publishing remain theoretical *(mw-agency-015)* |\n| G5 | Brand guidelines received | Client Success Manager | Ad copy and content briefs cannot be approved or finalised *(mw-agency-015)* |\n\n> **Hard rule:** Zero live PPC spend until G1 and G2 are cleared. All campaigns remain in draft/paused state until that point. *(mw-agency-003)*\n\n---\n\n## Risk Register\n\n| # | Risk | Severity | Owner | Current Status |\n|---|---|---|---|---|\n| R1 | Conversion tracking unverified | Critical | PPC Lead + Analytics | Unresolved |\n| R2 | Primary conversion actions not confirmed | Critical | Client Success Manager | Unresolved |\n| R3 | CMS access level unclear | High | Client Success Manager | Unresolved |\n| R4 | Product feed quality inconsistent | High | PPC Lead | Known issue \u2014 audit pending |\n| R5 | Thin product page descriptions | High | SEO Lead + Content | Known issue \u2014 audit pending |\n| R6 | No negative keyword lists in place | High | PPC Lead | To be built in Week 2 |\n| R7 | Analytics access pending | High | Analytics Specialist | Unresolved |\n| R8 | Brand guidelines not received | Medium | Client Success Manager | Unresolved |\n| R9 | Limited historical SEO data | Medium | SEO Lead | Inherent \u2014 baseline to be set in Week 1 |\n| R10 | Seasonal demand shifts strongly | Medium | PPC Lead + Content | To be factored into budget split and content timing |\n\n*Sources: mw-agency-003, mw-agency-008, mw-agency-015*\n\n---\n\n## PPC Execution Plan\n\n**Campaign:** Harbor Homeware Paid Search Efficiency\n**Monthly budget:** \u00a312,500\n**Goal:** Improve conversion efficiency \u2014 reduce wasted spend, tighten keyword intent, align landing pages to ad copy\n\n### Proposed Budget Allocation",
+      "created_at": "2026-05-26T12:32:31.058152Z",
+      "overall_score": 1.0
+    }
+  ],
+  "events": [
+    {
+      "id": "fa79bbfc-b095-455d-869d-a42ae767068c",
+      "user_id": "97f6c957-e358-4788-ac21-48b351dd3d77",
+      "run_id": "89a8293c-d87d-4874-b69a-f7387f389222",
+      "workflow_id": "fd96c1a6-318f-4686-911d-409cfa35b63a",
+      "agent_id": null,
+      "event_type": "retrieve",
+      "title": "Retrieved agency knowledge from vector store",
+      "payload": {
+        "filenames": [
+          "client_onboarding_checklist.md",
+          "mock_meeting_notes_internal_kickoff.md",
+          "monthly_reporting_policy.md",
+          "ppc_campaign_setup_standard.md",
+          "quality_assurance_guidelines.md",
+          "sample_client_aquila_fitness.md",
+          "sample_client_harbor_homeware.md",
+          "service_catalog.md"
+        ],
+        "citation_count": 8
+      },
+      "created_at": "2026-05-26T12:32:35.510838Z"
+    },
+    {
+      "id": "4b7c9057-43fa-43eb-bfc0-5f38a3f9a72e",
+      "user_id": "97f6c957-e358-4788-ac21-48b351dd3d77",
+      "run_id": "89a8293c-d87d-4874-b69a-f7387f389222",
+      "workflow_id": "fd96c1a6-318f-4686-911d-409cfa35b63a",
+      "agent_id": "704ef00f-f5d8-4aa5-9bbe-a9dac31fa003",
+      "event_type": "agent_output",
+      "title": "Account Manager Agent completed its step",
+      "payload": {
+        "output_preview": "# Harbor Homeware \u2014 Next Month Execution Plan\n\n**Prepared by:** Account Manager Agent\n**Status:** Awaiting internal approval before execution\n**Budget confirmed:** PPC \u00a312,500 | SEO: Scope-based (no budget set)\n\n---\n\n## Context Summary\n\nHarbor Homeware is an ecommerce client in kitchen accessories and home organisation. Three commercial goals drive this plan:\n\n1. Reduce wasted paid search spend\n2. Grow non-branded organic traffic\n3. Improve monthly reporting quality\n\nSeveral onboarding items remain open from the internal kickoff (doc: mw-agency-015). These are flagged as risks below and must be resolved before full execution can begin.\n\n---\n\n## Open Risks \u2014 Must Resolve Before Launch\n\n| Item | Status | Owner | Impact if Unresolved |\n|---|---|---|---|\n| Analytics / conversion tracking access | Pending | Client Success Manager | PPC campaign must remain in draft; no performance data for re"
+      },
+      "created_at": "2026-05-26T12:32:56.339677Z"
+    },
+    {
+      "id": "855981de-8186-46bb-8cea-12b6f420fa6e",
+      "user_id": "97f6c957-e358-4788-ac21-48b351dd3d77",
+      "run_id": "89a8293c-d87d-4874-b69a-f7387f389222",
+      "workflow_id": "fd96c1a6-318f-4686-911d-409cfa35b63a",
+      "agent_id": "dfb8934b-7c06-47ca-8c11-b11ca1861e1d",
+      "event_type": "agent_output",
+      "title": "Data Analyst Agent completed its step",
+      "payload": {
+        "output_preview": "# Harbor Homeware \u2014 Next Month PPC & SEO Execution Plan\n**Prepared by:** Data Analyst Agent (Marketing Performance)\n**Role:** Trend detection, anomaly flagging, weak-spot identification, evidence-backed prioritisation\n**Input reviewed:** Account Manager Agent plan, agency source documents (mw-agency-002, 003, 005, 008, 014, 015)\n**Status:** Analytical layer \u2014 for approval before execution handoff\n\n---\n\n## Analyst Note on Data Availability\n\n> **Critical gap:** No live performance data has been retrieved for Harbor Homeware. There are no historical PPC metrics (spend, CPA, CTR, conversion rate), no organic session trends, no ranking data, and no search term reports in the workspace. All analysis below is therefore based on **structural risk signals** drawn from agency documents and client profile context. Where a finding is inferential rather than data-confirmed, it is marked **[HYPOTHESIS"
+      },
+      "created_at": "2026-05-26T12:33:17.548159Z"
+    },
+    {
+      "id": "057d5463-2ec0-49f5-a5bd-c09f2c90f784",
+      "user_id": "97f6c957-e358-4788-ac21-48b351dd3d77",
+      "run_id": "89a8293c-d87d-4874-b69a-f7387f389222",
+      "workflow_id": "fd96c1a6-318f-4686-911d-409cfa35b63a",
+      "agent_id": "1daf52f8-b2e9-488e-9a17-232545fcac06",
+      "event_type": "agent_output",
+      "title": "SEO Strategist completed its step",
+      "payload": {
+        "output_preview": "# Harbor Homeware \u2014 SEO Execution Plan\n**Prepared by:** SEO Strategist Agent\n**Role:** Technical SEO, content gap analysis, search-intent mapping, organic growth prioritisation\n**Input reviewed:** Account Manager Agent plan, Data Analyst Agent notes, agency source documents (mw-agency-002, 003, 005, 008, 014, 015)\n**Status:** SEO layer \u2014 for approval before execution handoff\n\n---\n\n## SEO Analyst Note on Data Availability\n\n> **Critical gap:** No live organic performance data exists in the workspace for Harbor Homeware. There are no organic session volumes, no ranking positions, no crawl reports, no indexed page counts, and no backlink data. All recommendations below are therefore grounded in **structural signals** from the client profile and agency documents. Findings marked **[HYPOTHESIS]** are inferential and must be validated once crawl and analytics access is established.\n>\n> Minimum "
+      },
+      "created_at": "2026-05-26T12:33:35.695092Z"
+    },
+    {
+      "id": "09c17888-84f9-46d3-b786-3b6476ad735a",
+      "user_id": "97f6c957-e358-4788-ac21-48b351dd3d77",
+      "run_id": "89a8293c-d87d-4874-b69a-f7387f389222",
+      "workflow_id": "fd96c1a6-318f-4686-911d-409cfa35b63a",
+      "agent_id": "d806cb1c-653a-45e6-b3df-6d2b10f21ef4",
+      "event_type": "agent_output",
+      "title": "PPC Strategist completed its step",
+      "payload": {
+        "output_preview": "# Harbor Homeware \u2014 PPC Execution Plan\n**Prepared by:** PPC Strategist Agent\n**Role:** Paid search budget, keyword strategy, negative keywords, ad copy, and landing-page alignment\n**Input reviewed:** Account Manager Agent plan, Data Analyst Agent notes, SEO Strategist Agent notes, agency source documents (mw-agency-002, 003, 005, 008, 014, 015)\n**Status:** PPC specialist layer \u2014 for approval before execution handoff\n\n---\n\n## PPC Analyst Note on Data Availability\n\n> **Critical gap:** No live Google Ads performance data exists in the workspace. There are no search term reports, no Quality Score data, no historical CPA or ROAS figures, no impression share data, and no shopping campaign structure details. All recommendations below are grounded in **structural signals** from the client profile, agency documents, and prior agent notes. Findings marked **[HYPOTHESIS]** are inferential and must "
+      },
+      "created_at": "2026-05-26T12:33:53.505417Z"
+    },
+    {
+      "id": "77ab8f1f-28af-4d13-8694-24cb8f5b9f34",
+      "user_id": "97f6c957-e358-4788-ac21-48b351dd3d77",
+      "run_id": "89a8293c-d87d-4874-b69a-f7387f389222",
+      "workflow_id": "fd96c1a6-318f-4686-911d-409cfa35b63a",
+      "agent_id": "cc01af47-fea6-4010-b068-458d47f5b36d",
+      "event_type": "agent_output",
+      "title": "Content Strategist Agent completed its step",
+      "payload": {
+        "output_preview": "# Harbor Homeware \u2014 Content Strategy & Messaging Execution Plan\n**Prepared by:** Content Strategist Agent\n**Role:** SEO content briefs, landing-page messaging, PPC ad copy direction, content priorities\n**Input reviewed:** Account Manager Agent plan, Data Analyst Agent notes, SEO Strategist Agent notes, PPC Strategist Agent notes, agency source documents (mw-agency-002, 003, 005, 008, 014, 015)\n**Status:** Content strategy layer \u2014 for approval before execution handoff\n\n---\n\n## Content Strategist Note on Data Availability\n\n> **Critical gap:** No live content performance data exists in the workspace for Harbor Homeware. There are no organic ranking positions, no page-level traffic data, no on-site search queries, no ad copy performance history, and no existing content inventory. All recommendations below are grounded in **structural signals** from the client profile and prior agent notes. F"
+      },
+      "created_at": "2026-05-26T12:34:12.682521Z"
+    },
+    {
+      "id": "125cb900-2d9e-45dc-be0a-9074f07bc0f3",
+      "user_id": "97f6c957-e358-4788-ac21-48b351dd3d77",
+      "run_id": "89a8293c-d87d-4874-b69a-f7387f389222",
+      "workflow_id": "fd96c1a6-318f-4686-911d-409cfa35b63a",
+      "agent_id": "4118658a-feba-404c-9152-a5bca4127275",
+      "event_type": "agent_output",
+      "title": "QA/Compliance Agent completed its step",
+      "payload": {
+        "output_preview": "# Harbor Homeware \u2014 QA & Compliance Review\n**Prepared by:** QA/Compliance Agent\n**Role:** Grounding, brand safety, risk completeness, and approval-gate review\n**Input reviewed:** Account Manager Agent, Data Analyst Agent, SEO Strategist Agent, PPC Strategist Agent, Content Strategist Agent plans\n**Source documents reviewed:** mw-agency-002, 003, 005, 008, 013, 014, 015\n**Status:** Final gate before execution handoff\n\n---\n\n## QA Summary Verdict\n\n| Area | Status | Notes |\n|---|---|---|\n| Grounding and source citation | \u2705 Pass | All material claims cite agency source documents |\n| Fabricated client facts | \u2705 Pass | No invented metrics, rankings, or performance figures present |\n| Risk disclosure | \u2705 Pass | Blockers and hypotheses consistently flagged across all agents |\n| Budget accuracy | \u2705 Pass | \u00a312,500 PPC budget referenced consistently; SEO correctly noted as scope-based |\n| Conversion"
+      },
+      "created_at": "2026-05-26T12:34:31.752546Z"
+    },
+    {
+      "id": "b5f28d94-0119-4e15-a4ee-1b70f2bbb181",
+      "user_id": "97f6c957-e358-4788-ac21-48b351dd3d77",
+      "run_id": "89a8293c-d87d-4874-b69a-f7387f389222",
+      "workflow_id": "fd96c1a6-318f-4686-911d-409cfa35b63a",
+      "agent_id": "406a368a-8a04-4a19-8717-5d10484c9ef5",
+      "event_type": "agent_output",
+      "title": "Workflow Supervisor Agent completed its step",
+      "payload": {
+        "output_preview": "# Harbor Homeware \u2014 Final Execution Plan\n**Prepared by:** Workflow Supervisor Agent\n**Role:** Conflict resolution, priority arbitration, and final execution sequencing\n**Input reviewed:** Account Manager, Data Analyst, SEO Strategist, PPC Strategist, Content Strategist, and QA/Compliance Agent outputs\n**Source documents:** mw-agency-002, 003, 005, 008, 013, 014, 015\n**Status:** APPROVED FOR EXECUTION \u2014 subject to mandatory pre-launch gates\n\n---\n\n## Supervisor Assessment\n\nAll six specialist agents produced consistent, well-grounded outputs. The QA/Compliance Agent has issued a pass verdict. No material conflicts exist between agent recommendations. This document resolves minor sequencing overlaps, consolidates the priority stack, and provides the single authoritative execution reference for the team.\n\n**One structural note before execution begins:** No live performance data exists for Har"
+      },
+      "created_at": "2026-05-26T12:34:49.241095Z"
+    },
+    {
+      "id": "2e9ebe7d-1966-4d42-a6d6-b75a07a7f4af",
+      "user_id": "97f6c957-e358-4788-ac21-48b351dd3d77",
+      "run_id": "89a8293c-d87d-4874-b69a-f7387f389222",
+      "workflow_id": "fd96c1a6-318f-4686-911d-409cfa35b63a",
+      "agent_id": "680514e7-0abd-49c3-adea-824cb1035874",
+      "event_type": "agent_output",
+      "title": "Reporting Agent completed its step",
+      "payload": {
+        "output_preview": "# Harbor Homeware \u2014 Next Month PPC & SEO Execution Plan\n**Prepared by:** Reporting Agent\n**Reviewed by:** Workflow Supervisor Agent (approved), QA/Compliance Agent (pass)\n**Period:** Next calendar month\n**Status:** Approved for execution \u2014 subject to mandatory pre-launch gates\n**Distribution:** Client stakeholders and internal delivery team\n\n---\n\n## Executive Summary\n\nThis plan covers PPC and SEO execution for Harbor Homeware across the coming month. Three commercial goals drive all activity: reduce wasted paid search spend, grow non-branded organic traffic, and improve monthly reporting quality.\n\n**Month 1 is a foundation month.** No live performance data exists for this account. Every recommendation is grounded in structural signals from agency documents and the client profile. Optimisation decisions will begin in Month 2 once baselines are established.\n\nFive pre-launch gates must be c"
+      },
+      "created_at": "2026-05-26T12:35:03.129271Z"
+    },
+    {
+      "id": "f06fc251-fbc4-420c-9d4c-775ebe79a6a2",
+      "user_id": "97f6c957-e358-4788-ac21-48b351dd3d77",
+      "run_id": "89a8293c-d87d-4874-b69a-f7387f389222",
+      "workflow_id": "fd96c1a6-318f-4686-911d-409cfa35b63a",
+      "agent_id": null,
+      "event_type": "approval_created",
+      "title": "Task proposal queued: Audit wasted PPC spend and negative keyword gaps",
+      "payload": {
+        "task_id": "c67831bc-56c3-461b-9671-c1247402f226",
+        "priority": "high",
+        "discipline": "ppc",
+        "approval_id": "56f69d50-d499-48ab-8081-ec836c43d6a8"
+      },
+      "created_at": "2026-05-26T12:35:05.426014Z"
+    },
+    {
+      "id": "5a26bd2e-9916-4cc0-a20a-9e0612cea8de",
+      "user_id": "97f6c957-e358-4788-ac21-48b351dd3d77",
+      "run_id": "89a8293c-d87d-4874-b69a-f7387f389222",
+      "workflow_id": "fd96c1a6-318f-4686-911d-409cfa35b63a",
+      "agent_id": null,
+      "event_type": "approval_created",
+      "title": "Task proposal queued: Prioritize next-month SEO technical and content fixes",
+      "payload": {
+        "task_id": "cece8a14-3d36-47f4-8ddc-c761da09e329",
+        "priority": "high",
+        "discipline": "seo",
+        "approval_id": "5b3076ec-ee7b-47e0-b10b-3f5f39de6a60"
+      },
+      "created_at": "2026-05-26T12:35:06.468431Z"
+    },
+    {
+      "id": "606fa909-a88d-4336-aca6-6a76356d5320",
+      "user_id": "97f6c957-e358-4788-ac21-48b351dd3d77",
+      "run_id": "89a8293c-d87d-4874-b69a-f7387f389222",
+      "workflow_id": "fd96c1a6-318f-4686-911d-409cfa35b63a",
+      "agent_id": null,
+      "event_type": "approval_created",
+      "title": "Task proposal queued: Create content briefs for highest-intent organic opportunities",
+      "payload": {
+        "task_id": "181abaeb-f11e-4478-b972-c2c1eb18aeec",
+        "priority": "medium",
+        "discipline": "content",
+        "approval_id": "6cf0339b-afcc-4415-82d4-b2ff01e456b6"
+      },
+      "created_at": "2026-05-26T12:35:07.615736Z"
+    },
+    {
+      "id": "32274c3e-36bf-4d7a-abcc-311748d8a2c8",
+      "user_id": "97f6c957-e358-4788-ac21-48b351dd3d77",
+      "run_id": "89a8293c-d87d-4874-b69a-f7387f389222",
+      "workflow_id": "fd96c1a6-318f-4686-911d-409cfa35b63a",
+      "agent_id": null,
+      "event_type": "tasks_proposed",
+      "title": "Monthly PPC/SEO action plan queued for approval",
+      "payload": {
+        "count": 3,
+        "client": "Harbor Homeware"
+      },
+      "created_at": "2026-05-26T12:35:08.304454Z"
+    },
+    {
+      "id": "47ba8752-1232-4166-b5e1-c02ef6ca22ce",
+      "user_id": "97f6c957-e358-4788-ac21-48b351dd3d77",
+      "run_id": "89a8293c-d87d-4874-b69a-f7387f389222",
+      "workflow_id": "fd96c1a6-318f-4686-911d-409cfa35b63a",
+      "agent_id": null,
+      "event_type": "approval_created",
+      "title": "Campaign update queued: Harbor Homeware Paid Search Efficiency",
+      "payload": {
+        "approval_id": "e36c4117-4f1b-445f-a10c-ee6e4164c6a7",
+        "campaign_id": "c40ef42d-1b15-49f9-9411-49f8172c47bd"
+      },
+      "created_at": "2026-05-26T12:35:09.587038Z"
+    },
+    {
+      "id": "89806c6e-f34e-4669-8911-7bc797cfc204",
+      "user_id": "97f6c957-e358-4788-ac21-48b351dd3d77",
+      "run_id": "89a8293c-d87d-4874-b69a-f7387f389222",
+      "workflow_id": "fd96c1a6-318f-4686-911d-409cfa35b63a",
+      "agent_id": null,
+      "event_type": "approval_gate",
+      "title": "Workflow paused persistent changes behind human approval",
+      "payload": {
+        "pending_actions": 4
+      },
+      "created_at": "2026-05-26T12:35:10.279145Z"
+    },
+    {
+      "id": "e3c2d99d-0b7a-4566-b595-4e935b6f0644",
+      "user_id": "97f6c957-e358-4788-ac21-48b351dd3d77",
+      "run_id": "89a8293c-d87d-4874-b69a-f7387f389222",
+      "workflow_id": "fd96c1a6-318f-4686-911d-409cfa35b63a",
+      "agent_id": null,
+      "event_type": "export_docx",
+      "title": "Client-ready DOCX report is available for this run",
+      "payload": {
+        "download_path": "/api/runs/89a8293c-d87d-4874-b69a-f7387f389222/docx"
+      },
+      "created_at": "2026-05-26T12:35:10.734348Z"
+    },
+    {
+      "id": "41456b7d-4b7d-4539-a5a9-b346d9215f06",
+      "user_id": "97f6c957-e358-4788-ac21-48b351dd3d77",
+      "run_id": "89a8293c-d87d-4874-b69a-f7387f389222",
+      "workflow_id": "fd96c1a6-318f-4686-911d-409cfa35b63a",
+      "agent_id": null,
+      "event_type": "evaluation",
+      "title": "Run evaluation completed",
+      "payload": {
+        "overall_score": 1.0,
+        "proposed_actions": 4
+      },
+      "created_at": "2026-05-26T12:35:11.651477Z"
+    }
+  ],
+  "evaluation": {
+    "id": "86b03f4d-71dc-4695-8775-9f395a7fd20a",
+    "user_id": "97f6c957-e358-4788-ac21-48b351dd3d77",
+    "run_id": "89a8293c-d87d-4874-b69a-f7387f389222",
+    "citation_coverage": 1.0,
+    "actionability": 1.0,
+    "risk_control": 1.0,
+    "completeness": 1.0,
+    "overall_score": 1.0,
+    "notes": "Scores are heuristic for the academic MVP: citations=8, agent_steps=8, proposed_actions=4.",
+    "created_at": "2026-05-26T12:35:11.186876Z"
+  },
+  "approvals": [
+    {
+      "id": "e36c4117-4f1b-445f-a10c-ee6e4164c6a7",
+      "user_id": "97f6c957-e358-4788-ac21-48b351dd3d77",
+      "run_id": "89a8293c-d87d-4874-b69a-f7387f389222",
+      "entity_type": "campaign",
+      "entity_id": "c40ef42d-1b15-49f9-9411-49f8172c47bd",
+      "action_type": "update_campaign",
+      "title": "Approve campaign note update: Harbor Homeware Paid Search Efficiency",
+      "summary": "Append the agent-reviewed monthly operations recommendation to the campaign notes.",
+      "payload": {
+        "campaign_id": "c40ef42d-1b15-49f9-9411-49f8172c47bd",
+        "notes_append": "AI monthly operations recommendation from run 89a8293c-d87d-4874-b69a-f7387f389222: ## Account Manager Agent # Harbor Homeware \u2014 Next Month Execution Plan **Prepared by:** Account Manager Agent **Status:** Awaiting internal approval before execution **Budget confirmed:** PPC \u00a312,500 | SEO: Scope-based (no budget set) --- ## Context Summary Harbor Homeware is an ecommerce client in kitchen accessories and home organisation. Three commercial goals drive this plan: 1. Reduce wasted paid search spend 2. Grow non-branded organic traffic 3. Improve monthly reporting quality Several onboarding items remain open from the internal kickoff (doc: mw-agency-015). These are flagged as ris"
+      },
+      "status": "pending",
+      "decision_note": "",
+      "decided_at": null,
+      "created_at": "2026-05-26T12:35:09.366210Z"
+    },
+    {
+      "id": "6cf0339b-afcc-4415-82d4-b2ff01e456b6",
+      "user_id": "97f6c957-e358-4788-ac21-48b351dd3d77",
+      "run_id": "89a8293c-d87d-4874-b69a-f7387f389222",
+      "entity_type": "agency_task",
+      "entity_id": "181abaeb-f11e-4478-b972-c2c1eb18aeec",
+      "action_type": "create_task",
+      "title": "Approve task: Create content briefs for highest-intent organic opportunities",
+      "summary": "Draft briefs around the content gaps and search-intent opportunities found in the run. Evidence: ## Account Manager Agent # Harbor Homeware \u2014 Next Month Execution Plan **Prepared by:** Account Manager Agent **Status:** Awaiting internal approval before execution **Budget confirmed:** PPC \u00a312,500 | SEO: Scope-based (no budget set) --- ## Context Summary Harbor Homeware is an ecommerce client in kitchen accessories and home organisation. Three commercial goals drive this plan: 1. Reduce wasted paid search spend 2. Grow non-branded organic traffic 3. Improve monthly reporting quality Several onboarding items remain open from the internal kickoff (doc: mw-agency-015). These are flagged as risks below and must be resolved before full execution can begin. --- ## Open Risks \u2014 Must Resolve Before Launch | Item | Status | Owner | Impact if Unresolved | |---|---|---|---| | Analytics / conversio",
+      "payload": {
+        "title": "Create content briefs for highest-intent organic opportunities",
+        "task_id": "181abaeb-f11e-4478-b972-c2c1eb18aeec",
+        "priority": "medium",
+        "client_id": "137acd09-b139-4a0e-9826-5ea114ebfd53",
+        "discipline": "content",
+        "campaign_id": "d552fc9e-bd25-479d-86f7-fe2e97ad95e3",
+        "description": "Draft briefs around the content gaps and search-intent opportunities found in the run. Evidence: ## Account Manager Agent # Harbor Homeware \u2014 Next Month Execution Plan **Prepared by:** Account Manager Agent **Status:** Awaiting internal approval before execution **Budget confirmed:** PPC \u00a312,500 | SEO: Scope-based (no budget set) --- ## Context Summary Harbor Homeware is an ecommerce client in kitchen accessories and home organisation. Three commercial goals drive this plan: 1. Reduce wasted paid search spend 2. Grow non-branded organic traffic 3. Improve monthly reporting quality Several onboarding items remain open from the internal kickoff (doc: mw-agency-015). These are flagged as risks below and must be resolved before full execution can begin. --- ## Open Risks \u2014 Must Resolve Before Launch | Item | Status | Owner | Impact if Unresolved | |---|---|---|---| | Analytics / conversio"
+      },
+      "status": "pending",
+      "decision_note": "",
+      "decided_at": null,
+      "created_at": "2026-05-26T12:35:07.388039Z"
+    },
+    {
+      "id": "5b3076ec-ee7b-47e0-b10b-3f5f39de6a60",
+      "user_id": "97f6c957-e358-4788-ac21-48b351dd3d77",
+      "run_id": "89a8293c-d87d-4874-b69a-f7387f389222",
+      "entity_type": "agency_task",
+      "entity_id": "cece8a14-3d36-47f4-8ddc-c761da09e329",
+      "action_type": "create_task",
+      "title": "Approve task: Prioritize next-month SEO technical and content fixes",
+      "summary": "Convert the SEO agent findings into a prioritized implementation queue. Evidence: ## Account Manager Agent # Harbor Homeware \u2014 Next Month Execution Plan **Prepared by:** Account Manager Agent **Status:** Awaiting internal approval before execution **Budget confirmed:** PPC \u00a312,500 | SEO: Scope-based (no budget set) --- ## Context Summary Harbor Homeware is an ecommerce client in kitchen accessories and home organisation. Three commercial goals drive this plan: 1. Reduce wasted paid search spend 2. Grow non-branded organic traffic 3. Improve monthly reporting quality Several onboarding items remain open from the internal kickoff (doc: mw-agency-015). These are flagged as risks below and must be resolved before full execution can begin. --- ## Open Risks \u2014 Must Resolve Before Launch | Item | Status | Owner | Impact if Unresolved | |---|---|---|---| | Analytics / conversio",
+      "payload": {
+        "title": "Prioritize next-month SEO technical and content fixes",
+        "task_id": "cece8a14-3d36-47f4-8ddc-c761da09e329",
+        "priority": "high",
+        "client_id": "137acd09-b139-4a0e-9826-5ea114ebfd53",
+        "discipline": "seo",
+        "campaign_id": "d552fc9e-bd25-479d-86f7-fe2e97ad95e3",
+        "description": "Convert the SEO agent findings into a prioritized implementation queue. Evidence: ## Account Manager Agent # Harbor Homeware \u2014 Next Month Execution Plan **Prepared by:** Account Manager Agent **Status:** Awaiting internal approval before execution **Budget confirmed:** PPC \u00a312,500 | SEO: Scope-based (no budget set) --- ## Context Summary Harbor Homeware is an ecommerce client in kitchen accessories and home organisation. Three commercial goals drive this plan: 1. Reduce wasted paid search spend 2. Grow non-branded organic traffic 3. Improve monthly reporting quality Several onboarding items remain open from the internal kickoff (doc: mw-agency-015). These are flagged as risks below and must be resolved before full execution can begin. --- ## Open Risks \u2014 Must Resolve Before Launch | Item | Status | Owner | Impact if Unresolved | |---|---|---|---| | Analytics / conversio"
+      },
+      "status": "pending",
+      "decision_note": "",
+      "decided_at": null,
+      "created_at": "2026-05-26T12:35:06.239996Z"
+    },
+    {
+      "id": "56f69d50-d499-48ab-8081-ec836c43d6a8",
+      "user_id": "97f6c957-e358-4788-ac21-48b351dd3d77",
+      "run_id": "89a8293c-d87d-4874-b69a-f7387f389222",
+      "entity_type": "agency_task",
+      "entity_id": "c67831bc-56c3-461b-9671-c1247402f226",
+      "action_type": "create_task",
+      "title": "Approve task: Audit wasted PPC spend and negative keyword gaps",
+      "summary": "Review PPC search-intent mismatches, wasted spend patterns, and negative keyword candidates. Evidence: ## Account Manager Agent # Harbor Homeware \u2014 Next Month Execution Plan **Prepared by:** Account Manager Agent **Status:** Awaiting internal approval before execution **Budget confirmed:** PPC \u00a312,500 | SEO: Scope-based (no budget set) --- ## Context Summary Harbor Homeware is an ecommerce client in kitchen accessories and home organisation. Three commercial goals drive this plan: 1. Reduce wasted paid search spend 2. Grow non-branded organic traffic 3. Improve monthly reporting quality Several onboarding items remain open from the internal kickoff (doc: mw-agency-015). These are flagged as risks below and must be resolved before full execution can begin. --- ## Open Risks \u2014 Must Resolve Before Launch | Item | Status | Owner | Impact if Unresolved | |---|---|---|---| | Analytics / conversio",
+      "payload": {
+        "title": "Audit wasted PPC spend and negative keyword gaps",
+        "task_id": "c67831bc-56c3-461b-9671-c1247402f226",
+        "priority": "high",
+        "client_id": "137acd09-b139-4a0e-9826-5ea114ebfd53",
+        "discipline": "ppc",
+        "campaign_id": "c40ef42d-1b15-49f9-9411-49f8172c47bd",
+        "description": "Review PPC search-intent mismatches, wasted spend patterns, and negative keyword candidates. Evidence: ## Account Manager Agent # Harbor Homeware \u2014 Next Month Execution Plan **Prepared by:** Account Manager Agent **Status:** Awaiting internal approval before execution **Budget confirmed:** PPC \u00a312,500 | SEO: Scope-based (no budget set) --- ## Context Summary Harbor Homeware is an ecommerce client in kitchen accessories and home organisation. Three commercial goals drive this plan: 1. Reduce wasted paid search spend 2. Grow non-branded organic traffic 3. Improve monthly reporting quality Several onboarding items remain open from the internal kickoff (doc: mw-agency-015). These are flagged as risks below and must be resolved before full execution can begin. --- ## Open Risks \u2014 Must Resolve Before Launch | Item | Status | Owner | Impact if Unresolved | |---|---|---|---| | Analytics / conversio"
+      },
+      "status": "pending",
+      "decision_note": "",
+      "decided_at": null,
+      "created_at": "2026-05-26T12:35:05.194527Z"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "181abaeb-f11e-4478-b972-c2c1eb18aeec",
+      "user_id": "97f6c957-e358-4788-ac21-48b351dd3d77",
+      "client_id": "137acd09-b139-4a0e-9826-5ea114ebfd53",
+      "campaign_id": "d552fc9e-bd25-479d-86f7-fe2e97ad95e3",
+      "source_run_id": "89a8293c-d87d-4874-b69a-f7387f389222",
+      "approval_id": "6cf0339b-afcc-4415-82d4-b2ff01e456b6",
+      "title": "Create content briefs for highest-intent organic opportunities",
+      "description": "Draft briefs around the content gaps and search-intent opportunities found in the run. Evidence: ## Account Manager Agent # Harbor Homeware \u2014 Next Month Execution Plan **Prepared by:** Account Manager Agent **Status:** Awaiting internal approval before execution **Budget confirmed:** PPC \u00a312,500 | SEO: Scope-based (no budget set) --- ## Context Summary Harbor Homeware is an ecommerce client in kitchen accessories and home organisation. Three commercial goals drive this plan: 1. Reduce wasted paid search spend 2. Grow non-branded organic traffic 3. Improve monthly reporting quality Several onboarding items remain open from the internal kickoff (doc: mw-agency-015). These are flagged as risks below and must be resolved before full execution can begin. --- ## Open Risks \u2014 Must Resolve Before Launch | Item | Status | Owner | Impact if Unresolved | |---|---|---|---| | Analytics / conversio",
+      "discipline": "content",
+      "priority": "medium",
+      "status": "pending_approval",
+      "created_at": "2026-05-26T12:35:07.156115Z",
+      "updated_at": "2026-05-26T12:35:07.156115Z",
+      "client_name": "Harbor Homeware",
+      "campaign_name": "Harbor Homeware Organic Growth Sprint"
+    },
+    {
+      "id": "cece8a14-3d36-47f4-8ddc-c761da09e329",
+      "user_id": "97f6c957-e358-4788-ac21-48b351dd3d77",
+      "client_id": "137acd09-b139-4a0e-9826-5ea114ebfd53",
+      "campaign_id": "d552fc9e-bd25-479d-86f7-fe2e97ad95e3",
+      "source_run_id": "89a8293c-d87d-4874-b69a-f7387f389222",
+      "approval_id": "5b3076ec-ee7b-47e0-b10b-3f5f39de6a60",
+      "title": "Prioritize next-month SEO technical and content fixes",
+      "description": "Convert the SEO agent findings into a prioritized implementation queue. Evidence: ## Account Manager Agent # Harbor Homeware \u2014 Next Month Execution Plan **Prepared by:** Account Manager Agent **Status:** Awaiting internal approval before execution **Budget confirmed:** PPC \u00a312,500 | SEO: Scope-based (no budget set) --- ## Context Summary Harbor Homeware is an ecommerce client in kitchen accessories and home organisation. Three commercial goals drive this plan: 1. Reduce wasted paid search spend 2. Grow non-branded organic traffic 3. Improve monthly reporting quality Several onboarding items remain open from the internal kickoff (doc: mw-agency-015). These are flagged as risks below and must be resolved before full execution can begin. --- ## Open Risks \u2014 Must Resolve Before Launch | Item | Status | Owner | Impact if Unresolved | |---|---|---|---| | Analytics / conversio",
+      "discipline": "seo",
+      "priority": "high",
+      "status": "pending_approval",
+      "created_at": "2026-05-26T12:35:06.014961Z",
+      "updated_at": "2026-05-26T12:35:06.014961Z",
+      "client_name": "Harbor Homeware",
+      "campaign_name": "Harbor Homeware Organic Growth Sprint"
+    },
+    {
+      "id": "c67831bc-56c3-461b-9671-c1247402f226",
+      "user_id": "97f6c957-e358-4788-ac21-48b351dd3d77",
+      "client_id": "137acd09-b139-4a0e-9826-5ea114ebfd53",
+      "campaign_id": "c40ef42d-1b15-49f9-9411-49f8172c47bd",
+      "source_run_id": "89a8293c-d87d-4874-b69a-f7387f389222",
+      "approval_id": "56f69d50-d499-48ab-8081-ec836c43d6a8",
+      "title": "Audit wasted PPC spend and negative keyword gaps",
+      "description": "Review PPC search-intent mismatches, wasted spend patterns, and negative keyword candidates. Evidence: ## Account Manager Agent # Harbor Homeware \u2014 Next Month Execution Plan **Prepared by:** Account Manager Agent **Status:** Awaiting internal approval before execution **Budget confirmed:** PPC \u00a312,500 | SEO: Scope-based (no budget set) --- ## Context Summary Harbor Homeware is an ecommerce client in kitchen accessories and home organisation. Three commercial goals drive this plan: 1. Reduce wasted paid search spend 2. Grow non-branded organic traffic 3. Improve monthly reporting quality Several onboarding items remain open from the internal kickoff (doc: mw-agency-015). These are flagged as risks below and must be resolved before full execution can begin. --- ## Open Risks \u2014 Must Resolve Before Launch | Item | Status | Owner | Impact if Unresolved | |---|---|---|---| | Analytics / conversio",
+      "discipline": "ppc",
+      "priority": "high",
+      "status": "pending_approval",
+      "created_at": "2026-05-26T12:35:04.965288Z",
+      "updated_at": "2026-05-26T12:35:04.965288Z",
+      "client_name": "Harbor Homeware",
+      "campaign_name": "Harbor Homeware Paid Search Efficiency"
+    }
+  ],
+  "documents": [
+    {
+      "id": "827c1095-b972-4b89-b8af-afad8ad22840",
+      "user_id": "97f6c957-e358-4788-ac21-48b351dd3d77",
+      "filename": "service_catalog.md",
+      "content_type": ".md",
+      "status": "indexed",
+      "chunk_count": 1,
+      "created_at": "2026-05-26T12:32:28.337950Z"
+    },
+    {
+      "id": "52e5e9fc-cac0-4738-87fa-c6bf9b7444d0",
+      "user_id": "97f6c957-e358-4788-ac21-48b351dd3d77",
+      "filename": "seo_audit_framework.md",
+      "content_type": ".md",
+      "status": "indexed",
+      "chunk_count": 1,
+      "created_at": "2026-05-26T12:32:27.540248Z"
+    },
+    {
+      "id": "6ce27105-6f4f-4d28-a4ab-bc4f5ae57448",
+      "user_id": "97f6c957-e358-4788-ac21-48b351dd3d77",
+      "filename": "sample_client_polaris_saas.md",
+      "content_type": ".md",
+      "status": "indexed",
+      "chunk_count": 1,
+      "created_at": "2026-05-26T12:32:26.767567Z"
+    },
+    {
+      "id": "a83b906f-3ff4-497a-8f58-9974a1e8a9b1",
+      "user_id": "97f6c957-e358-4788-ac21-48b351dd3d77",
+      "filename": "sample_client_harbor_homeware.md",
+      "content_type": ".md",
+      "status": "indexed",
+      "chunk_count": 1,
+      "created_at": "2026-05-26T12:32:25.966547Z"
+    },
+    {
+      "id": "6af835c6-1834-4ac0-9a83-f61a6e8488fb",
+      "user_id": "97f6c957-e358-4788-ac21-48b351dd3d77",
+      "filename": "sample_client_aquila_fitness.md",
+      "content_type": ".md",
+      "status": "indexed",
+      "chunk_count": 1,
+      "created_at": "2026-05-26T12:32:25.195115Z"
+    },
+    {
+      "id": "8b8dd495-dfed-451f-a152-646aa7236e59",
+      "user_id": "97f6c957-e358-4788-ac21-48b351dd3d77",
+      "filename": "risk_register_template.md",
+      "content_type": ".md",
+      "status": "indexed",
+      "chunk_count": 1,
+      "created_at": "2026-05-26T12:32:24.436055Z"
+    },
+    {
+      "id": "4a49e950-49ea-4b26-ae98-8167008475a8",
+      "user_id": "97f6c957-e358-4788-ac21-48b351dd3d77",
+      "filename": "quality_assurance_guidelines.md",
+      "content_type": ".md",
+      "status": "indexed",
+      "chunk_count": 1,
+      "created_at": "2026-05-26T12:32:23.670803Z"
+    },
+    {
+      "id": "64f9a1d0-35f0-4899-ad1b-286f9a7348af",
+      "user_id": "97f6c957-e358-4788-ac21-48b351dd3d77",
+      "filename": "ppc_campaign_setup_standard.md",
+      "content_type": ".md",
+      "status": "indexed",
+      "chunk_count": 1,
+      "created_at": "2026-05-26T12:32:22.883989Z"
+    },
+    {
+      "id": "37f2b598-a357-4038-a5f7-7e74567e0632",
+      "user_id": "97f6c957-e358-4788-ac21-48b351dd3d77",
+      "filename": "monthly_reporting_policy.md",
+      "content_type": ".md",
+      "status": "indexed",
+      "chunk_count": 1,
+      "created_at": "2026-05-26T12:32:22.164053Z"
+    },
+    {
+      "id": "65aabbd5-0922-4ee6-95e4-c3d195e2395a",
+      "user_id": "97f6c957-e358-4788-ac21-48b351dd3d77",
+      "filename": "mock_meeting_notes_internal_kickoff.md",
+      "content_type": ".md",
+      "status": "indexed",
+      "chunk_count": 1,
+      "created_at": "2026-05-26T12:32:21.401989Z"
+    },
+    {
+      "id": "54b5db95-0fad-491b-ba1c-eb0c9c297d7e",
+      "user_id": "97f6c957-e358-4788-ac21-48b351dd3d77",
+      "filename": "content_brief_template.md",
+      "content_type": ".md",
+      "status": "indexed",
+      "chunk_count": 1,
+      "created_at": "2026-05-26T12:32:20.639459Z"
+    },
+    {
+      "id": "529de17d-55cc-488b-84ef-d5defa0e0d7a",
+      "user_id": "97f6c957-e358-4788-ac21-48b351dd3d77",
+      "filename": "client_onboarding_checklist.md",
+      "content_type": ".md",
+      "status": "indexed",
+      "chunk_count": 1,
+      "created_at": "2026-05-26T12:32:19.867894Z"
+    },
+    {
+      "id": "8c4d6d19-fee3-431f-8338-1a2b4c48fbc4",
+      "user_id": "97f6c957-e358-4788-ac21-48b351dd3d77",
+      "filename": "analytics_tracking_notes.md",
+      "content_type": ".md",
+      "status": "indexed",
+      "chunk_count": 1,
+      "created_at": "2026-05-26T12:32:19.076317Z"
+    },
+    {
+      "id": "db3bf516-c201-43a3-853a-3a6fa376b5dd",
+      "user_id": "97f6c957-e358-4788-ac21-48b351dd3d77",
+      "filename": "agent_workflow_examples.md",
+      "content_type": ".md",
+      "status": "indexed",
+      "chunk_count": 1,
+      "created_at": "2026-05-26T12:32:18.365309Z"
+    },
+    {
+      "id": "91bf862e-8854-4401-80b8-49f57bb713dd",
+      "user_id": "97f6c957-e358-4788-ac21-48b351dd3d77",
+      "filename": "agency_overview.md",
+      "content_type": ".md",
+      "status": "indexed",
+      "chunk_count": 1,
+      "created_at": "2026-05-26T12:32:17.593563Z"
+    },
+    {
+      "id": "84715d5e-f527-4832-b769-949ed7d2b480",
+      "user_id": "97f6c957-e358-4788-ac21-48b351dd3d77",
+      "filename": "README.md",
+      "content_type": ".md",
+      "status": "indexed",
+      "chunk_count": 1,
+      "created_at": "2026-05-26T12:32:16.816684Z"
+    }
+  ],
+  "clients": [
+    {
+      "id": "137acd09-b139-4a0e-9826-5ea114ebfd53",
+      "user_id": "97f6c957-e358-4788-ac21-48b351dd3d77",
+      "name": "Harbor Homeware",
+      "industry": "Homeware ecommerce",
+      "goals": "Reduce wasted paid search spend, grow non-branded organic traffic, and improve monthly client reporting quality.",
+      "tone": "Clear, practical, commercially focused, and suitable for client stakeholders.",
+      "constraints": "Use only synthetic performance and agency documents. Do not claim live access to ad platforms or analytics tools.",
+      "status": "active",
+      "created_at": "2026-05-26T12:32:12.243516Z",
+      "updated_at": "2026-05-26T12:32:12.243516Z"
+    }
+  ],
+  "campaigns": [
+    {
+      "id": "c40ef42d-1b15-49f9-9411-49f8172c47bd",
+      "user_id": "97f6c957-e358-4788-ac21-48b351dd3d77",
+      "client_id": "137acd09-b139-4a0e-9826-5ea114ebfd53",
+      "name": "Harbor Homeware Paid Search Efficiency",
+      "channel": "ppc",
+      "status": "active",
+      "objective": "Improve conversion efficiency by tightening keyword intent, negative keywords, and landing-page alignment.",
+      "monthly_budget": "12500.00",
+      "notes": "Synthetic campaign used for academic demonstration of PPC operations.",
+      "created_at": "2026-05-26T12:32:12.930609Z",
+      "updated_at": "2026-05-26T12:32:12.930609Z",
+      "client_name": "Harbor Homeware"
+    },
+    {
+      "id": "d552fc9e-bd25-479d-86f7-fe2e97ad95e3",
+      "user_id": "97f6c957-e358-4788-ac21-48b351dd3d77",
+      "client_id": "137acd09-b139-4a0e-9826-5ea114ebfd53",
+      "name": "Harbor Homeware Organic Growth Sprint",
+      "channel": "seo",
+      "status": "active",
+      "objective": "Increase qualified organic sessions through content gap work, technical fixes, and search-intent mapping.",
+      "monthly_budget": null,
+      "notes": "Synthetic campaign used for academic demonstration of SEO operations.",
+      "created_at": "2026-05-26T12:32:13.392580Z",
+      "updated_at": "2026-05-26T12:32:13.392580Z",
+      "client_name": "Harbor Homeware"
+    }
+  ]
+}
