@@ -219,3 +219,10 @@ Fix in progress:
 Checks run:
 - `backend/.venv/bin/python -m compileall backend/app`
 - `PYTHONPATH=backend backend/.venv/bin/python - <<'PY' ... synthetic_corpus_dir() ...`
+
+Resolution:
+- Committed fix in `700559e` (`Fix synthetic corpus path on Railway`).
+- First Railway redeploy failed due a Nixpacks/nixpkgs tarball read error unrelated to app code.
+- Retry Railway deployment succeeded: `7ee8ee8a-f398-4788-b6c2-0a5d76468d54`.
+- Authenticated production test passed against `https://api-production-e70a9.up.railway.app/api/documents/seed-synthetic` with response `{"indexed_documents":16}`.
+- Evidence saved to `evidence/tests/seed-synthetic-production-2026-05-26.json`.
