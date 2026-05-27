@@ -288,8 +288,11 @@ Evidence artifacts:
 - `evidence/reports/modelweave-ux-polish-smoke-report.docx`
 
 Open questions or next steps:
-- Deploy backend to Railway and frontend to Vercel after committing.
-- After deployment, verify backend health, frontend load, run-detail API availability, and DOCX download in production.
+- Backend deployed to Railway deployment `9b25098c-a949-4f3a-943a-603c127d631a`.
+- Frontend deployed to a new accessible Vercel project under the current CLI account: `https://modelweave-two.vercel.app`, deployment `dpl_G6FfvyPTXdyKSpGhpe9sZLZjwJ1t`.
+- The earlier `https://modelweave-six.vercel.app` project is still live but is not visible to the currently authenticated Vercel CLI account, so it could not be updated from this shell.
+- Production checks passed: backend health OK, unauthenticated `GET /api/runs/{id}` returns 401 instead of 404, confirming the new run-detail route is deployed; frontend HTTP 200 and deployed JS contains the markdown renderer, run progress flow, approval cards, and new API base URL.
+- If using `https://modelweave-two.vercel.app` for fresh registrations, add this domain to Supabase Auth redirect URLs if email confirmation redirects are rejected.
 - A durable queue can replace FastAPI background tasks later if this evolves beyond the academic demo.
 - Evidence saved to `evidence/tests/document-management-smoke-2026-05-26.json`.
 
