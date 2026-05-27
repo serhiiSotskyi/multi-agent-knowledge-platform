@@ -238,6 +238,59 @@ Checks run:
 - `backend/.venv/bin/python -m compileall backend/app`
 - `npm run build` from `frontend/`
 - Authenticated document-management smoke test: seed 16 documents, open one document, rename it, delete it, confirm GET returns 404 after deletion.
+
+### 2026-05-27
+
+Current task:
+- Implemented the ModelWeave UX and output polish plan so AI outputs render as formatted content, DOCX exports are markdown-aware, and workflow runs expose live execution state.
+
+What changed:
+- Added safe frontend markdown rendering with `react-markdown`, `remark-gfm`, and `rehype-sanitize`.
+- Added shared `MarkdownContent` rendering and plain-text preview helpers for outputs, traces, approvals, tasks, documents, reports, and run lists.
+- Added live run status fields and migration for pending/running/waiting approval/completed/failed states.
+- Changed workflow run creation to return immediately and execute through FastAPI background tasks.
+- Added `GET /api/runs/{id}` run-detail polling endpoint.
+- Added node-level action events: node started, node completed, node failed, approval required, and run completed.
+- Added a React Flow run progress view with waiting/running/completed/approval/failed node states and animated active edges.
+- Redesigned document, approval, report, and agency run panels for more readable cards, semantic badges, scrollable detail panes, markdown previews, and DOCX-first report actions.
+- Replaced newline-only DOCX export with a `markdown-it-py` renderer for headings, inline emphasis, lists, tables, blockquotes, dividers, code, evaluation tables, approvals, timeline, trace, and citations.
+- Refined DOCX approval and citation appendices after render QA so long markdown excerpts flow as readable blocks instead of oversized table cells.
+
+Why it changed:
+- The previous MVP exposed raw markdown in the UI and DOCX output, and workflow runs appeared mostly static while agents were executing.
+- The upgrade makes ModelWeave feel like a PPC/SEO agency workforce product instead of a raw technical demo.
+
+Files touched:
+- `backend/migrations/003_run_execution_state.sql`
+- `backend/app/api/routes.py`
+- `backend/app/services/agents.py`
+- `backend/app/services/agency.py`
+- `backend/app/services/reports.py`
+- `backend/requirements.txt`
+- `frontend/app/page.tsx`
+- `frontend/app/globals.css`
+- `frontend/package.json`
+- `frontend/package-lock.json`
+- `evidence/tests/ux-polish-smoke-2026-05-27.json`
+- `evidence/reports/modelweave-ux-polish-smoke-report.docx`
+
+Commands or checks run:
+- `backend/.venv/bin/python -m compileall backend/app`
+- `npm run build` from `frontend/`
+- `PYTHONPATH=backend backend/.venv/bin/python - <<'PY' ... init_db() ...`
+- Authenticated service-layer smoke test with temporary user `ux-polish-smoke-1779882331`: seed synthetic corpus, bootstrap workforce, create non-blocking run, execute workflow, confirm pending approval state, events, traces, citations, approvals, evaluation, and DOCX output.
+- Structural DOCX check: zero raw `**`, zero raw `#`, and zero markdown table separator lines in generated report text.
+- Rendered `evidence/reports/modelweave-ux-polish-smoke-report.docx` to `/tmp/modelweave-ux-report-render` and visually inspected representative pages including first page, approval/timeline area, and citation appendix pages.
+- Local browser verification at `http://localhost:3000`: confirmed title, login UI, and PPC/SEO workforce positioning in the DOM. Screenshot capture timed out in the browser bridge, but the app shell loaded successfully.
+
+Evidence artifacts:
+- `evidence/tests/ux-polish-smoke-2026-05-27.json`
+- `evidence/reports/modelweave-ux-polish-smoke-report.docx`
+
+Open questions or next steps:
+- Deploy backend to Railway and frontend to Vercel after committing.
+- After deployment, verify backend health, frontend load, run-detail API availability, and DOCX download in production.
+- A durable queue can replace FastAPI background tasks later if this evolves beyond the academic demo.
 - Evidence saved to `evidence/tests/document-management-smoke-2026-05-26.json`.
 
 Production status:
@@ -289,3 +342,28 @@ Commands or checks run:
 - `render_docx.py ModelWeave_Diploma_Thesis_UA.docx --output_dir evidence/rendered-thesis-ua --emit_pdf`
 - Python DOCX structure check for paragraphs, tables, images, and formula paragraph text.
 - English-leftover scan over Ukrainian DOCX paragraphs and table cells.
+
+### 2026-05-27
+
+Current task:
+- Implementing the ModelWeave UX and output polish plan: formatted markdown in the web app, markdown-aware DOCX exports, live run status/animations, and cleaner product screens.
+
+Status:
+- Started implementation after confirming the current app renders LLM markdown as raw text and `POST /api/runs` is still synchronous.
+- Existing local uncommitted change noted: `ModelWeave_Diploma_Thesis_EN.docx`. This is unrelated and must remain untouched/unstaged.
+- Added migration `003_run_execution_state.sql` for run status, current node, timestamps, and errors.
+- Refactored backend run execution into immediate run creation plus background execution helpers.
+- Added run detail API support and status/event payloads for frontend polling.
+- Replaced DOCX export logic with a markdown-aware renderer that creates real Word headings, lists, tables, callouts, score tables, approval tables, event tables, trace sections, and citation tables.
+- Added frontend markdown dependencies and a shared safe Markdown renderer.
+- Updated run, approvals, reports, documents, tasks, and agency run views to render formatted markdown and cleaner status cards.
+- Added a read-only animated React Flow run-progress view based on workflow nodes and live action events.
+
+Checks run:
+- `backend/.venv/bin/python -m compileall backend/app`
+- `npm run build` from `frontend/`
+
+Next actions:
+- Apply the new migration to the configured database.
+- Run authenticated local smoke tests for non-blocking runs, polling, events, DOCX export, and approvals.
+- Render a generated DOCX report to verify no raw markdown remains.

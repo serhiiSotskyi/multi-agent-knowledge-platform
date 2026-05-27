@@ -1,7 +1,7 @@
 from uuid import uuid4
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, UploadFile
 from fastapi.responses import Response
 from pydantic import BaseModel, Field
 from psycopg.types.json import Jsonb
@@ -10,7 +10,7 @@ from app.core.config import get_settings
 from app.core.security import CurrentUser, get_current_user
 from app.db.database import run_one, run_query
 from app.services.agency import approve_action, ensure_agency_defaults, reject_action
-from app.services.agents import bootstrap_defaults, run_workflow
+from app.services.agents import bootstrap_defaults, create_workflow_run, execute_workflow_run, get_run_detail
 from app.services.documents import chunk_text, extract_text
 from app.services.provider_keys import has_provider_key, save_provider_key
 from app.services.reports import build_run_docx
@@ -554,16 +554,19 @@ def seed_synthetic_documents(user: CurrentUser = Depends(get_current_user)) -> d
 
 
 @router.post("/runs")
-async def run_agents(body: RunIn, user: CurrentUser = Depends(get_current_user)) -> dict:
-    return await run_workflow(user.id, body.workflow_id, body.prompt)
+async def run_agents(body: RunIn, background_tasks: BackgroundTasks, user: CurrentUser = Depends(get_current_user)) -> dict:
+    run = create_workflow_run(user.id, body.workflow_id, body.prompt)
+    background_tasks.add_task(execute_workflow_run, user.id, run["id"])
+    return run
 
 
 @router.get("/runs")
 def list_runs(user: CurrentUser = Depends(get_current_user)) -> list[dict]:
     return run_query(
         """
-        select r.id, r.workflow_id, w.name as workflow_name, r.prompt, r.output, r.created_at,
-               e.overall_score
+        select r.id, r.workflow_id, w.name as workflow_name, r.prompt, r.output, r.status,
+               r.current_node_id, r.current_node_label, r.error_message, r.created_at,
+               r.started_at, r.completed_at, e.overall_score
         from runs r
         left join workflows w on w.id = r.workflow_id
         left join run_evaluations e on e.run_id = r.id
@@ -572,6 +575,11 @@ def list_runs(user: CurrentUser = Depends(get_current_user)) -> list[dict]:
         """,
         {"user_id": user.id},
     )
+
+
+@router.get("/runs/{run_id}")
+def get_run(run_id: str, user: CurrentUser = Depends(get_current_user)) -> dict:
+    return get_run_detail(user.id, run_id)
 
 
 @router.get("/runs/{run_id}/events")
@@ -600,7 +608,15 @@ def run_evaluation(run_id: str, user: CurrentUser = Depends(get_current_user)) -
 
 @router.get("/runs/{run_id}/docx")
 def run_docx(run_id: str, user: CurrentUser = Depends(get_current_user)) -> Response:
-    run = run_one("select * from runs where id = %(id)s and user_id = %(user_id)s", {"id": run_id, "user_id": user.id})
+    run = run_one(
+        """
+        select r.*, w.name as workflow_name
+        from runs r
+        left join workflows w on w.id = r.workflow_id
+        where r.id = %(id)s and r.user_id = %(user_id)s
+        """,
+        {"id": run_id, "user_id": user.id},
+    )
     if not run:
         raise HTTPException(status_code=404, detail="Run not found")
     run["evaluation"] = run_one("select * from run_evaluations where run_id = %(run_id)s", {"run_id": run_id})

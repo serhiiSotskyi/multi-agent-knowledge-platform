@@ -366,6 +366,27 @@ def evaluate_run(user_id: str, run_id: str, citations: list[dict], trace: list[d
     return run_one("select * from run_evaluations where run_id = %(run_id)s", {"run_id": run_id})
 
 
+def _complete_run_if_no_pending_approvals(user_id: str, run_id: str | None) -> None:
+    if not run_id:
+        return
+    pending = run_one(
+        "select count(*) as count from approvals where run_id = %(run_id)s and user_id = %(user_id)s and status = 'pending'",
+        {"run_id": run_id, "user_id": user_id},
+    )
+    if pending and pending["count"] == 0:
+        run_query(
+            """
+            update runs
+            set status = 'completed',
+                current_node_id = null,
+                current_node_label = 'Completed',
+                completed_at = coalesce(completed_at, now())
+            where id = %(run_id)s and user_id = %(user_id)s and status = 'waiting_approval'
+            """,
+            {"run_id": run_id, "user_id": user_id},
+        )
+
+
 def approve_action(user_id: str, approval_id: str, note: str = "") -> dict:
     approval = run_one(
         "select * from approvals where id = %(id)s and user_id = %(user_id)s",
@@ -400,6 +421,7 @@ def approve_action(user_id: str, approval_id: str, note: str = "") -> dict:
         """,
         {"id": approval_id, "user_id": user_id, "note": note},
     )
+    _complete_run_if_no_pending_approvals(user_id, str(approval["run_id"]) if approval.get("run_id") else None)
     return run_one("select * from approvals where id = %(id)s", {"id": approval_id})
 
 
@@ -423,4 +445,5 @@ def reject_action(user_id: str, approval_id: str, note: str = "") -> dict:
         """,
         {"id": approval_id, "user_id": user_id, "note": note},
     )
+    _complete_run_if_no_pending_approvals(user_id, str(approval["run_id"]) if approval.get("run_id") else None)
     return run_one("select * from approvals where id = %(id)s", {"id": approval_id})

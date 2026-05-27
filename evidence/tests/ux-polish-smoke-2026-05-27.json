@@ -1,0 +1,34 @@
+{
+  "user_id": "ux-polish-smoke-1779882331",
+  "seed_result": {
+    "indexed_documents": 16
+  },
+  "run_id": "f095167f-ef3c-4eec-90b6-811b629436ec",
+  "workflow_id": "7e1aa372-d66c-4963-9e24-e7cd46c3da21",
+  "initial_status": "pending",
+  "final_status": "waiting_approval",
+  "event_count": 46,
+  "event_types": [
+    "agent_output",
+    "approval_created",
+    "approval_required",
+    "evaluation",
+    "export_docx",
+    "node_completed",
+    "node_started",
+    "retrieve",
+    "run_completed",
+    "tasks_proposed"
+  ],
+  "trace_count": 8,
+  "citation_count": 8,
+  "approval_count": 4,
+  "overall_score": 1.0,
+  "docx_path": "evidence/reports/modelweave-ux-polish-smoke-report.docx",
+  "docx_paragraphs": 284,
+  "docx_tables": 31,
+  "raw_bold_markers": 0,
+  "raw_hash_markers": 0,
+  "raw_heading_lines": 0,
+  "raw_table_separator_lines": 0
+}

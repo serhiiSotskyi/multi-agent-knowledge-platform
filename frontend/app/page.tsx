@@ -12,11 +12,13 @@ import {
   type Node,
 } from "@xyflow/react";
 import {
+  AlertCircle,
   BarChart3,
   Bot,
   BriefcaseBusiness,
   CheckCircle2,
   ClipboardCheck,
+  Clock3,
   Database,
   Download,
   Eye,
@@ -24,7 +26,9 @@ import {
   GitBranch,
   KeyRound,
   ListChecks,
+  Loader2,
   LogOut,
+  PauseCircle,
   Save,
   Play,
   RefreshCw,
@@ -34,6 +38,9 @@ import {
   XCircle,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import rehypeSanitize from "rehype-sanitize";
+import remarkGfm from "remark-gfm";
 import { apiDownload, apiFetch } from "@/lib/api";
 import { supabase } from "@/lib/supabase";
 import type { Session } from "@supabase/supabase-js";
@@ -109,6 +116,7 @@ type ApprovalRow = {
 
 type ActionEvent = {
   id: string;
+  agent_id?: string | null;
   event_type: string;
   title: string;
   payload: Record<string, unknown>;
@@ -140,20 +148,42 @@ type DocumentDetail = DocumentRow & {
   chunks: Array<{ id: string; chunk_index: number; content: string; metadata: Record<string, unknown>; created_at: string }>;
 };
 
+type RunStatus = "pending" | "running" | "waiting_approval" | "completed" | "failed";
+type NodeStatus = "waiting" | "running" | "completed" | "approval_required" | "failed";
+type Citation = { filename: string; chunk_index: number; score: number; content: string };
+
 type RunRow = {
   id: string;
   workflow_id: string;
   workflow_name?: string;
   prompt: string;
   output: string;
+  status: RunStatus;
+  current_node_id?: string | null;
+  current_node_label?: string | null;
+  error_message?: string | null;
   overall_score?: number | null;
   created_at: string;
+  started_at?: string | null;
+  completed_at?: string | null;
 };
 
 type RunResult = {
   id: string;
+  workflow_id: string;
+  workflow_name?: string;
+  workflow_nodes?: Node[];
+  workflow_edges?: Edge[];
+  prompt: string;
+  status: RunStatus;
+  current_node_id?: string | null;
+  current_node_label?: string | null;
+  error_message?: string | null;
+  created_at: string;
+  started_at?: string | null;
+  completed_at?: string | null;
   output: string;
-  citations: Array<{ filename: string; chunk_index: number; score: number; content: string }>;
+  citations: Citation[];
   trace: Array<{ agent_name: string; output: string }>;
   events: ActionEvent[];
   approvals: ApprovalRow[];
@@ -173,6 +203,64 @@ const tabs = [
   ["agency-runs", BarChart3, "Agency Runs"],
   ["reports", FileText, "Reports"],
 ] as const;
+
+const terminalStatuses: RunStatus[] = ["completed", "waiting_approval", "failed"];
+
+function formatDate(value?: string | null) {
+  return value ? new Date(value).toLocaleString() : "N/A";
+}
+
+function statusTone(status?: string | null) {
+  if (!status) return "neutral";
+  const normalized = status.toLowerCase();
+  if (["completed", "approved", "active", "indexed", "api key configured"].includes(normalized)) return "success";
+  if (["running"].includes(normalized)) return "running";
+  if (["pending", "pending_approval", "waiting_approval"].includes(normalized)) return "warning";
+  if (["failed", "rejected", "api key missing"].includes(normalized)) return "danger";
+  return "neutral";
+}
+
+function plainTextPreview(markdown: string, maxLength = 180) {
+  const text = (markdown || "")
+    .replace(/```[\s\S]*?```/g, " ")
+    .replace(/`([^`]+)`/g, "$1")
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .replace(/!\[[^\]]*\]\([^)]+\)/g, " ")
+    .replace(/^#{1,6}\s+/gm, "")
+    .replace(/^\s*>+\s?/gm, "")
+    .replace(/^\s*[-*+]\s+/gm, "")
+    .replace(/^\s*\d+\.\s+/gm, "")
+    .replace(/^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?\s*$/gm, " ")
+    .replace(/\|/g, " / ")
+    .replace(/\*\*([^*]+)\*\*/g, "$1")
+    .replace(/__([^_]+)__/g, "$1")
+    .replace(/\*([^*]+)\*/g, "$1")
+    .replace(/_([^_]+)_/g, "$1")
+    .replace(/-{3,}/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (text.length <= maxLength) return text || "No content yet.";
+  return `${text.slice(0, maxLength - 1).trim()}...`;
+}
+
+function reportTitle(markdown: string) {
+  const heading = markdown.match(/^#\s+(.+)$/m) || markdown.match(/^##\s+(.+)$/m);
+  return heading ? plainTextPreview(heading[1], 90) : plainTextPreview(markdown, 90);
+}
+
+function StatusBadge({ status }: { status?: string | null }) {
+  return <span className={`badge badge-${statusTone(status)}`}>{status || "unknown"}</span>;
+}
+
+function MarkdownContent({ content, compact = false }: { content: string; compact?: boolean }) {
+  return (
+    <div className={`markdown ${compact ? "markdown-compact" : ""}`}>
+      <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeSanitize]}>
+        {content || "No content yet."}
+      </ReactMarkdown>
+    </div>
+  );
+}
 
 export default function Home() {
   const [session, setSession] = useState<Session | null>(null);
@@ -302,7 +390,7 @@ function Workspace({ session }: { session: Session }) {
             <p className="muted">Run an approval-gated AI workforce for PPC and SEO agency delivery.</p>
           </div>
           <div className="row">
-            <span className="badge">{providerConfigured ? "API key configured" : "API key missing"}</span>
+            <StatusBadge status={providerConfigured ? "API key configured" : "API key missing"} />
             <button onClick={() => refresh()}><RefreshCw size={16} /> Refresh</button>
           </div>
         </div>
@@ -396,7 +484,7 @@ function ClientsPanel({ clients, refresh, setNotice }: {
                 <td><strong>{client.name}</strong><br /><span className="small muted">{client.tone}</span></td>
                 <td>{client.industry}</td>
                 <td>{client.goals}</td>
-                <td><span className="badge">{client.status}</span></td>
+                <td><StatusBadge status={client.status} /></td>
               </tr>
             ))}
           </tbody>
@@ -464,7 +552,7 @@ function CampaignsPanel({ clients, campaigns, refresh, setNotice }: {
               <tr key={campaign.id}>
                 <td><strong>{campaign.name}</strong><br /><span className="small muted">{campaign.status}</span></td>
                 <td>{campaign.client_name}</td>
-                <td><span className="badge">{campaign.channel}</span></td>
+                <td><span className="badge badge-neutral">{campaign.channel}</span></td>
                 <td>{campaign.objective}</td>
                 <td>{campaign.monthly_budget ?? "N/A"}</td>
               </tr>
@@ -542,10 +630,10 @@ function DocumentsPanel({ documents, refresh, setNotice }: {
             <tbody>
               {documents.map((doc) => (
                 <tr key={doc.id}>
-                  <td><strong>{doc.filename}</strong><br /><span className="small muted">{doc.status}</span></td>
-                  <td>{doc.content_type}</td>
+                  <td><strong>{doc.filename}</strong><br /><StatusBadge status={doc.status} /></td>
+                  <td><span className="file-pill">{doc.content_type || "file"}</span></td>
                   <td>{doc.chunk_count}</td>
-                  <td>{new Date(doc.created_at).toLocaleString()}</td>
+                  <td>{formatDate(doc.created_at)}</td>
                   <td>
                     <div className="row">
                       <button onClick={() => openDocument(doc.id)}><Eye size={16} /> Open</button>
@@ -566,7 +654,7 @@ function DocumentsPanel({ documents, refresh, setNotice }: {
               <label className="stack small">Status<input value={edit.status} onChange={(event) => setEdit({ ...edit, status: event.target.value })} /></label>
               <button className="primary" disabled={!edit.filename} onClick={saveDocument}><Save size={16} /> Save metadata</button>
               <p className="small muted">{selected.chunk_count} indexed chunks. This view shows reconstructed indexed text, not the original uploaded file.</p>
-              <div className="output document-preview">{selected.content || "No indexed content available."}</div>
+              <div className="document-preview"><MarkdownContent content={selected.content || "No indexed content available."} /></div>
             </>
           ) : (
             <p className="muted">Use Open to read indexed document content, rename a document, update metadata, or delete it from the knowledge base.</p>
@@ -736,10 +824,29 @@ function RunPanel({ workflows, refresh, setNotice }: {
   const [prompt, setPrompt] = useState("Prepare next month's PPC and SEO execution plan for Harbor Homeware.");
   const [running, setRunning] = useState(false);
   const [result, setResult] = useState<RunResult | null>(null);
+  const selectedWorkflow = workflows.find((workflow) => workflow.id === workflowId);
+  const activeRun = Boolean(result && !terminalStatuses.includes(result.status));
 
   useEffect(() => {
     if (!workflowId && workflows[0]) setWorkflowId(workflows[0].id);
   }, [workflows, workflowId]);
+
+  useEffect(() => {
+    if (!result || terminalStatuses.includes(result.status)) return;
+    const timer = window.setInterval(async () => {
+      try {
+        const next = await apiFetch<RunResult>(`/runs/${result.id}`);
+        setResult(next);
+        if (terminalStatuses.includes(next.status)) {
+          await refresh();
+          setNotice(next.status === "failed" ? "Workflow run failed." : "Workflow run finished.");
+        }
+      } catch (error) {
+        setNotice(error instanceof Error ? error.message : "Unable to refresh run status.");
+      }
+    }, 1300);
+    return () => window.clearInterval(timer);
+  }, [result?.id, result?.status, refresh, setNotice]);
 
   async function run() {
     setRunning(true);
@@ -747,8 +854,7 @@ function RunPanel({ workflows, refresh, setNotice }: {
     try {
       const output = await apiFetch<RunResult>("/runs", { method: "POST", body: JSON.stringify({ workflow_id: workflowId, prompt }) });
       setResult(output);
-      await refresh();
-      setNotice("Workflow run completed.");
+      setNotice("Workflow run started.");
     } finally {
       setRunning(false);
     }
@@ -761,30 +867,45 @@ function RunPanel({ workflows, refresh, setNotice }: {
           {workflows.map((workflow) => <option key={workflow.id} value={workflow.id}>{workflow.name}</option>)}
         </select>
         <textarea value={prompt} onChange={(event) => setPrompt(event.target.value)} />
-        <button className="primary" disabled={!workflowId || running} onClick={run}><Play size={16} /> {running ? "Running..." : "Run agents"}</button>
+        <button className="primary" disabled={!workflowId || running || activeRun} onClick={run}>
+          {activeRun ? <Loader2 size={16} className="spin" /> : <Play size={16} />}
+          {activeRun ? "Agents running" : running ? "Starting..." : "Run agents"}
+        </button>
       </div>
       {result && (
-        <div className="grid two">
+        <div className="grid">
+          <div className="panel stack">
+            <div className="run-header">
+              <div>
+                <h2>{result.workflow_name ?? selectedWorkflow?.name ?? "Workflow run"}</h2>
+                <p className="muted">{result.current_node_label || plainTextPreview(result.prompt, 120)}</p>
+              </div>
+              <StatusBadge status={result.status} />
+            </div>
+            <RunProgressFlow result={result} workflow={selectedWorkflow} />
+            {result.error_message && <p className="error-text"><AlertCircle size={16} /> {result.error_message}</p>}
+          </div>
+          <div className="grid two">
           <div className="panel stack">
             <h2>Final output</h2>
             {result.evaluation && <ScoreCard evaluation={result.evaluation} />}
-            <div className="output">{result.output}</div>
+            <div className="report-preview"><MarkdownContent content={result.output} /></div>
             <button onClick={() => downloadRun(result.id)}><Download size={16} /> Download DOCX</button>
           </div>
           <div className="panel stack">
             <h2>Execution timeline</h2>
-            {result.events.map((event) => (
-              <p key={event.id} className="small"><strong>{event.event_type}</strong>: {event.title}</p>
-            ))}
+            <EventTimeline events={result.events} />
             <h2>Approval-gated actions</h2>
-            {result.approvals.map((approval) => (
-              <p key={approval.id} className="small"><strong>{approval.status}</strong> - {approval.title}</p>
-            ))}
+            {result.approvals.length ? result.approvals.map((approval) => (
+              <div key={approval.id} className="mini-card">
+                <div className="row spread"><strong>{approval.title}</strong><StatusBadge status={approval.status} /></div>
+                <MarkdownContent content={approval.summary} compact />
+              </div>
+            )) : <p className="small muted">No approval-gated actions yet.</p>}
             <h2>Agent trace and sources</h2>
-            {result.trace.map((item, index) => <details key={index}><summary>{item.agent_name}</summary><p className="output">{item.output}</p></details>)}
-            {result.citations.map((citation, index) => (
-              <p key={index} className="small"><strong>{citation.filename}</strong> chunk {citation.chunk_index} score {citation.score.toFixed(3)}</p>
-            ))}
+            {result.trace.map((item, index) => <details key={index} className="trace-item"><summary>{item.agent_name}</summary><MarkdownContent content={item.output} /></details>)}
+            <CitationList citations={result.citations} />
+          </div>
           </div>
         </div>
       )}
@@ -803,6 +924,109 @@ function ScoreCard({ evaluation }: { evaluation: RunEvaluation }) {
   );
 }
 
+function eventNodeId(event: ActionEvent) {
+  const value = event.payload?.node_id;
+  return typeof value === "string" ? value : undefined;
+}
+
+function nodeStatusMap(result: RunResult, nodes: Node[]) {
+  const statuses = new Map<string, NodeStatus>();
+  nodes.forEach((node) => statuses.set(node.id, result.status === "completed" && result.events.length === 0 ? "completed" : "waiting"));
+  result.events.forEach((event) => {
+    const nodeId = eventNodeId(event);
+    if (!nodeId) return;
+    if (event.event_type === "node_started") statuses.set(nodeId, "running");
+    if (event.event_type === "node_completed") statuses.set(nodeId, "completed");
+    if (event.event_type === "node_failed") statuses.set(nodeId, "failed");
+    if (event.event_type === "approval_required") statuses.set(nodeId, "approval_required");
+  });
+  if (result.current_node_id && result.status === "running") statuses.set(result.current_node_id, "running");
+  if (result.current_node_id && result.status === "waiting_approval") statuses.set(result.current_node_id, "approval_required");
+  if (result.status === "failed" && result.current_node_id) statuses.set(result.current_node_id, "failed");
+  return statuses;
+}
+
+function statusPrefix(status: NodeStatus) {
+  if (status === "completed") return "OK";
+  if (status === "running") return "RUN";
+  if (status === "approval_required") return "WAIT";
+  if (status === "failed") return "!";
+  return "--";
+}
+
+function RunProgressFlow({ result, workflow }: { result: RunResult; workflow?: Workflow }) {
+  const baseNodes = result.workflow_nodes?.length ? result.workflow_nodes : workflow?.nodes ?? [];
+  const baseEdges = result.workflow_edges?.length ? result.workflow_edges : workflow?.edges ?? [];
+  const statuses = nodeStatusMap(result, baseNodes);
+  const nodes = baseNodes.map((node) => {
+    const status = statuses.get(node.id) ?? "waiting";
+    const label = typeof node.data?.label === "string" ? node.data.label : node.id;
+    return {
+      ...node,
+      draggable: false,
+      selectable: false,
+      className: `run-node run-node-${status}`,
+      data: { ...node.data, label: `${statusPrefix(status)} ${label}` },
+    };
+  });
+  const edges = baseEdges.map((edge) => ({
+    ...edge,
+    animated: edge.target === result.current_node_id || edge.source === result.current_node_id,
+    className: edge.target === result.current_node_id || edge.source === result.current_node_id ? "run-edge-active" : "",
+  }));
+
+  if (!nodes.length) return <EmptyState title="No workflow graph" body="This run does not have saved workflow nodes to render." />;
+
+  return (
+    <div className="flow-wrap progress-flow">
+      <ReactFlow nodes={nodes} edges={edges} fitView nodesDraggable={false} nodesConnectable={false} elementsSelectable={false}>
+        <Background />
+        <Controls showInteractive={false} />
+      </ReactFlow>
+    </div>
+  );
+}
+
+function EventTimeline({ events }: { events: ActionEvent[] }) {
+  if (!events.length) return <p className="small muted">No execution events have been recorded yet.</p>;
+  return (
+    <div className="timeline-list">
+      {events.map((event) => (
+        <div key={event.id} className={`timeline-item timeline-${statusTone(event.event_type.includes("failed") ? "failed" : event.event_type.includes("approval") ? "pending" : event.event_type.includes("started") ? "running" : "completed")}`}>
+          <span className="timeline-icon">
+            {event.event_type.includes("failed") ? <AlertCircle size={15} /> : event.event_type.includes("started") ? <Loader2 size={15} className="spin" /> : event.event_type.includes("approval") ? <PauseCircle size={15} /> : <CheckCircle2 size={15} />}
+          </span>
+          <span><strong>{event.title}</strong><br /><span className="small muted">{event.event_type} - {formatDate(event.created_at)}</span></span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function CitationList({ citations }: { citations: Citation[] }) {
+  if (!citations.length) return <p className="small muted">No citations returned yet.</p>;
+  return (
+    <div className="citation-list">
+      {citations.map((citation, index) => (
+        <details key={`${citation.filename}-${citation.chunk_index}-${index}`} className="citation-item">
+          <summary>{citation.filename} - chunk {citation.chunk_index} - score {citation.score.toFixed(3)}</summary>
+          <MarkdownContent content={citation.content} compact />
+        </details>
+      ))}
+    </div>
+  );
+}
+
+function EmptyState({ title, body }: { title: string; body: string }) {
+  return (
+    <div className="empty-state">
+      <Clock3 size={18} />
+      <strong>{title}</strong>
+      <span>{body}</span>
+    </div>
+  );
+}
+
 function ApprovalsPanel({ approvals, refresh, setNotice }: {
   approvals: ApprovalRow[];
   refresh: () => Promise<void>;
@@ -815,31 +1039,38 @@ function ApprovalsPanel({ approvals, refresh, setNotice }: {
   }
 
   return (
-    <section className="panel">
-      <h2>Human approval queue</h2>
-      <table className="table">
-        <thead><tr><th>Action</th><th>Type</th><th>Status</th><th>Summary</th><th>Decision</th></tr></thead>
-        <tbody>
+    <section className="grid">
+      <div className="section-heading">
+        <div>
+          <h2>Human approval queue</h2>
+          <p className="muted">Persistent task and campaign changes stay pending until a human decision is recorded.</p>
+        </div>
+        <StatusBadge status={`${approvals.filter((approval) => approval.status === "pending").length} pending`} />
+      </div>
+      {approvals.length === 0 ? <EmptyState title="No approvals yet" body="Run the Monthly PPC/SEO Operations Review workflow to queue approval-gated actions." /> : (
+        <div className="approval-grid">
           {approvals.map((approval) => (
-            <tr key={approval.id}>
-              <td><strong>{approval.title}</strong><br /><span className="small muted">{new Date(approval.created_at).toLocaleString()}</span></td>
-              <td>{approval.action_type}</td>
-              <td><span className="badge">{approval.status}</span></td>
-              <td>{approval.summary}</td>
-              <td>
-                {approval.status === "pending" ? (
-                  <div className="row">
-                    <button className="primary" onClick={() => decide(approval.id, "approve")}><CheckCircle2 size={16} /> Approve</button>
-                    <button onClick={() => decide(approval.id, "reject")}><XCircle size={16} /> Reject</button>
-                  </div>
-                ) : (
-                  <span className="small muted">Decision recorded</span>
-                )}
-              </td>
-            </tr>
+            <article key={approval.id} className="approval-card">
+              <div className="approval-card-header">
+                <div>
+                  <h3>{approval.title}</h3>
+                  <p className="small muted">{formatDate(approval.created_at)} - {approval.action_type} - {approval.entity_type}</p>
+                </div>
+                <StatusBadge status={approval.status} />
+              </div>
+              <MarkdownContent content={approval.summary || "No summary provided."} compact />
+              {approval.status === "pending" ? (
+                <div className="row">
+                  <button className="primary" onClick={() => decide(approval.id, "approve")}><CheckCircle2 size={16} /> Approve</button>
+                  <button onClick={() => decide(approval.id, "reject")}><XCircle size={16} /> Reject</button>
+                </div>
+              ) : (
+                <p className="small muted">Decision recorded.</p>
+              )}
+            </article>
           ))}
-        </tbody>
-      </table>
+        </div>
+      )}
     </section>
   );
 }
@@ -853,12 +1084,12 @@ function TasksPanel({ tasks }: { tasks: AgencyTaskRow[] }) {
         <tbody>
           {tasks.map((task) => (
             <tr key={task.id}>
-              <td><strong>{task.title}</strong><br /><span className="small muted">{task.description}</span></td>
+              <td><strong>{task.title}</strong><MarkdownContent content={task.description} compact /></td>
               <td>{task.client_name ?? "N/A"}</td>
               <td>{task.campaign_name ?? "N/A"}</td>
               <td>{task.discipline}</td>
               <td>{task.priority}</td>
-              <td><span className="badge">{task.status}</span></td>
+              <td><StatusBadge status={task.status} /></td>
             </tr>
           ))}
         </tbody>
@@ -868,18 +1099,10 @@ function TasksPanel({ tasks }: { tasks: AgencyTaskRow[] }) {
 }
 
 function AgencyRunsPanel({ runs }: { runs: RunRow[] }) {
-  const [selectedRun, setSelectedRun] = useState<RunRow | null>(null);
-  const [events, setEvents] = useState<ActionEvent[]>([]);
-  const [evaluation, setEvaluation] = useState<RunEvaluation | null>(null);
+  const [selectedRun, setSelectedRun] = useState<RunResult | null>(null);
 
   async function inspect(run: RunRow) {
-    setSelectedRun(run);
-    const [eventRows, evalRow] = await Promise.all([
-      apiFetch<ActionEvent[]>(`/runs/${run.id}/events`),
-      apiFetch<RunEvaluation>(`/runs/${run.id}/evaluation`).catch(() => null),
-    ]);
-    setEvents(eventRows);
-    setEvaluation(evalRow);
+    setSelectedRun(await apiFetch<RunResult>(`/runs/${run.id}`));
   }
 
   return (
@@ -887,12 +1110,13 @@ function AgencyRunsPanel({ runs }: { runs: RunRow[] }) {
       <div className="panel">
         <h2>Agency runs</h2>
         <table className="table">
-          <thead><tr><th>Workflow</th><th>Prompt</th><th>Score</th><th>Inspect</th></tr></thead>
+          <thead><tr><th>Workflow</th><th>Prompt</th><th>Status</th><th>Score</th><th>Inspect</th></tr></thead>
           <tbody>
             {runs.map((run) => (
               <tr key={run.id}>
                 <td>{run.workflow_name ?? run.workflow_id}</td>
-                <td>{run.prompt.slice(0, 140)}</td>
+                <td>{plainTextPreview(run.prompt, 140)}</td>
+                <td><StatusBadge status={run.status} /></td>
                 <td>{run.overall_score ?? "N/A"}</td>
                 <td><button onClick={() => inspect(run)}><BarChart3 size={16} /> Timeline</button></td>
               </tr>
@@ -902,33 +1126,55 @@ function AgencyRunsPanel({ runs }: { runs: RunRow[] }) {
       </div>
       <div className="panel stack">
         <h2>{selectedRun ? "Run timeline" : "Select a run"}</h2>
-        {evaluation && <ScoreCard evaluation={evaluation} />}
-        {events.map((event) => (
-          <p key={event.id} className="small"><strong>{event.event_type}</strong>: {event.title}</p>
-        ))}
+        {selectedRun ? (
+          <>
+            <div className="row spread"><StatusBadge status={selectedRun.status} /><span className="small muted">{formatDate(selectedRun.created_at)}</span></div>
+            {selectedRun.evaluation && <ScoreCard evaluation={selectedRun.evaluation} />}
+            <RunProgressFlow result={selectedRun} />
+            <EventTimeline events={selectedRun.events} />
+          </>
+        ) : <EmptyState title="No run selected" body="Choose a run to inspect its timeline, status, evaluation, and workflow graph." />}
       </div>
     </section>
   );
 }
 
 function ReportsPanel({ runs }: { runs: RunRow[] }) {
+  const [selectedRun, setSelectedRun] = useState<RunResult | null>(null);
+
+  async function preview(runId: string) {
+    setSelectedRun(await apiFetch<RunResult>(`/runs/${runId}`));
+  }
+
   return (
-    <section className="panel">
-      <h2>Run history</h2>
-      <table className="table">
-        <thead><tr><th>Prompt</th><th>Output</th><th>Score</th><th>Created</th><th>Export</th></tr></thead>
-        <tbody>
-          {runs.map((run) => (
-            <tr key={run.id}>
-              <td>{run.prompt.slice(0, 120)}</td>
-              <td>{run.output.slice(0, 180)}</td>
-              <td>{run.overall_score ?? "N/A"}</td>
-              <td>{new Date(run.created_at).toLocaleString()}</td>
-              <td><button onClick={() => downloadRun(run.id)}><Download size={16} /> DOCX</button></td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <section className="grid two">
+      <div className="panel">
+        <h2>Run history</h2>
+        <table className="table">
+          <thead><tr><th>Report</th><th>Status</th><th>Score</th><th>Created</th><th>Actions</th></tr></thead>
+          <tbody>
+            {runs.map((run) => (
+              <tr key={run.id}>
+                <td><strong>{reportTitle(run.output)}</strong><br /><span className="small muted">{plainTextPreview(run.prompt, 110)}</span></td>
+                <td><StatusBadge status={run.status} /></td>
+                <td>{run.overall_score ?? "N/A"}</td>
+                <td>{formatDate(run.created_at)}</td>
+                <td><div className="row"><button onClick={() => preview(run.id)}><Eye size={16} /> Preview</button><button className="primary" onClick={() => downloadRun(run.id)}><Download size={16} /> DOCX</button></div></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="panel stack">
+        <h2>{selectedRun ? reportTitle(selectedRun.output) : "Report preview"}</h2>
+        {selectedRun ? (
+          <>
+            <div className="row spread"><StatusBadge status={selectedRun.status} />{selectedRun.evaluation && <span className="badge badge-success">Score {selectedRun.evaluation.overall_score.toFixed(2)}</span>}</div>
+            <div className="report-preview"><MarkdownContent content={selectedRun.output} /></div>
+            <button className="primary" onClick={() => downloadRun(selectedRun.id)}><Download size={16} /> Download DOCX</button>
+          </>
+        ) : <EmptyState title="No report selected" body="Select Preview to read a formatted report before downloading the DOCX." />}
+      </div>
     </section>
   );
 }
