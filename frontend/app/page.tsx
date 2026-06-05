@@ -15,7 +15,6 @@ import {
   AlertCircle,
   BarChart3,
   Bot,
-  BriefcaseBusiness,
   CheckCircle2,
   ClipboardCheck,
   Clock3,
@@ -34,7 +33,7 @@ import {
   RefreshCw,
   Trash2,
   Upload,
-  Users,
+  Sparkles,
   XCircle,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -50,9 +49,21 @@ type Agent = {
   name: string;
   role: string;
   goal: string;
+  description: string;
+  system_prompt: string;
   model: string;
   temperature: number;
   tools: string[];
+  status: string;
+  trigger_type: string;
+  trigger_config: Record<string, unknown>;
+  permission_mode: string;
+  created_at: string;
+  updated_at?: string;
+};
+
+type AgentDetail = Agent & {
+  runs: RunRow[];
 };
 
 type Workflow = {
@@ -63,36 +74,10 @@ type Workflow = {
   edges: Edge[];
 };
 
-type ClientRow = {
-  id: string;
-  name: string;
-  industry: string;
-  goals: string;
-  tone: string;
-  constraints: string;
-  status: string;
-  created_at: string;
-};
-
-type CampaignRow = {
-  id: string;
-  client_id: string;
-  client_name?: string;
-  name: string;
-  channel: string;
-  status: string;
-  objective: string;
-  monthly_budget: number | null;
-  notes: string;
-  created_at: string;
-};
-
 type AgencyTaskRow = {
   id: string;
   client_id: string | null;
   client_name?: string;
-  campaign_id: string | null;
-  campaign_name?: string;
   title: string;
   description: string;
   discipline: string;
@@ -148,14 +133,17 @@ type DocumentDetail = DocumentRow & {
   chunks: Array<{ id: string; chunk_index: number; content: string; metadata: Record<string, unknown>; created_at: string }>;
 };
 
-type RunStatus = "pending" | "running" | "waiting_approval" | "completed" | "failed";
+type RunStatus = "queued" | "pending" | "running" | "waiting_approval" | "completed" | "failed";
 type NodeStatus = "waiting" | "running" | "completed" | "approval_required" | "failed";
 type Citation = { filename: string; chunk_index: number; score: number; content: string };
 
 type RunRow = {
   id: string;
-  workflow_id: string;
+  workflow_id?: string | null;
   workflow_name?: string;
+  agent_id?: string | null;
+  agent_name?: string | null;
+  trigger_source?: string;
   prompt: string;
   output: string;
   status: RunStatus;
@@ -170,8 +158,11 @@ type RunRow = {
 
 type RunResult = {
   id: string;
-  workflow_id: string;
+  workflow_id?: string | null;
   workflow_name?: string;
+  agent_id?: string | null;
+  agent_name?: string | null;
+  trigger_source?: string;
   workflow_nodes?: Node[];
   workflow_edges?: Edge[];
   prompt: string;
@@ -192,19 +183,17 @@ type RunResult = {
 
 const tabs = [
   ["setup", KeyRound, "Setup"],
-  ["clients", Users, "Clients"],
-  ["campaigns", BriefcaseBusiness, "Campaigns"],
-  ["documents", Database, "Documents"],
+  ["documents", Database, "Database"],
   ["agents", Bot, "Agents"],
-  ["workflow", GitBranch, "Workflow"],
-  ["run", Play, "Run"],
+  ["workflow", GitBranch, "Workflows"],
+  ["run", Play, "Runs"],
   ["approvals", ClipboardCheck, "Approvals"],
   ["tasks", ListChecks, "Tasks"],
-  ["agency-runs", BarChart3, "Agency Runs"],
   ["reports", FileText, "Reports"],
 ] as const;
 
 const terminalStatuses: RunStatus[] = ["completed", "waiting_approval", "failed"];
+const hiddenLegacyAgentNames = new Set(["PPC Strategist", "SEO Analyst"]);
 
 function formatDate(value?: string | null) {
   return value ? new Date(value).toLocaleString() : "N/A";
@@ -215,7 +204,7 @@ function statusTone(status?: string | null) {
   const normalized = status.toLowerCase();
   if (["completed", "approved", "active", "indexed", "api key configured"].includes(normalized)) return "success";
   if (["running"].includes(normalized)) return "running";
-  if (["pending", "pending_approval", "waiting_approval"].includes(normalized)) return "warning";
+  if (["queued", "pending", "pending_approval", "waiting_approval", "draft", "manual", "scheduled"].includes(normalized)) return "warning";
   if (["failed", "rejected", "api key missing"].includes(normalized)) return "danger";
   return "neutral";
 }
@@ -246,6 +235,10 @@ function plainTextPreview(markdown: string, maxLength = 180) {
 function reportTitle(markdown: string) {
   const heading = markdown.match(/^#\s+(.+)$/m) || markdown.match(/^##\s+(.+)$/m);
   return heading ? plainTextPreview(heading[1], 90) : plainTextPreview(markdown, 90);
+}
+
+function runTitle(row: Pick<RunRow, "workflow_name" | "workflow_id" | "agent_name" | "agent_id">) {
+  return row.workflow_name || row.agent_name || row.workflow_id || row.agent_id || "Run";
 }
 
 function StatusBadge({ status }: { status?: string | null }) {
@@ -303,19 +296,27 @@ function AuthPanel() {
 
   return (
     <main className="auth-page">
-      <section className="auth-box panel stack">
-        <div>
-          <h1>ModelWeave</h1>
-          <p className="muted">AI workforce platform for PPC and SEO agency operations.</p>
+      <section className="auth-box">
+        <div className="auth-brand">
+          <span className="brand-mark"><GitBranch size={20} /></span>
+          <div>
+            <h1>ModelWeave</h1>
+            <p>Document-grounded agent workflow platform.</p>
+          </div>
         </div>
-        <div className="row">
+        <div className="auth-copy">
+          <p className="eyebrow">Workspace control plane</p>
+          <h2>Run specialist agents with retrieval, approvals, and DOCX reporting.</h2>
+          <p className="muted">Use synthetic documents to demonstrate service-oriented LLM workflows without real company data.</p>
+        </div>
+        <div className="auth-tabs">
           <button className={mode === "signin" ? "primary" : ""} onClick={() => setMode("signin")}>Sign in</button>
           <button className={mode === "signup" ? "primary" : ""} onClick={() => setMode("signup")}>Register</button>
         </div>
         <label className="stack small">Email<input value={email} onChange={(event) => setEmail(event.target.value)} /></label>
         <label className="stack small">Password<input type="password" value={password} onChange={(event) => setPassword(event.target.value)} /></label>
         <button className="primary" onClick={submit}>{mode === "signin" ? "Sign in" : "Create account"}</button>
-        {message && <p className="small muted">{message}</p>}
+        {message && <p className="notice-card small">{message}</p>}
       </section>
     </main>
   );
@@ -323,8 +324,6 @@ function AuthPanel() {
 
 function Workspace({ session }: { session: Session }) {
   const [active, setActive] = useState<(typeof tabs)[number][0]>("setup");
-  const [clients, setClients] = useState<ClientRow[]>([]);
-  const [campaigns, setCampaigns] = useState<CampaignRow[]>([]);
   const [agents, setAgents] = useState<Agent[]>([]);
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
   const [documents, setDocuments] = useState<DocumentRow[]>([]);
@@ -335,10 +334,8 @@ function Workspace({ session }: { session: Session }) {
   const [notice, setNotice] = useState("");
 
   async function refresh() {
-    const [keyStatus, clientRows, campaignRows, agentRows, workflowRows, documentRows, taskRows, approvalRows, runRows] = await Promise.all([
+    const [keyStatus, agentRows, workflowRows, documentRows, taskRows, approvalRows, runRows] = await Promise.all([
       apiFetch<{ configured: boolean }>("/provider-key/status"),
-      apiFetch<ClientRow[]>("/clients"),
-      apiFetch<CampaignRow[]>("/campaigns"),
       apiFetch<Agent[]>("/agents"),
       apiFetch<Workflow[]>("/workflows"),
       apiFetch<DocumentRow[]>("/documents"),
@@ -347,8 +344,6 @@ function Workspace({ session }: { session: Session }) {
       apiFetch<RunRow[]>("/runs"),
     ]);
     setProviderConfigured(keyStatus.configured);
-    setClients(clientRows);
-    setCampaigns(campaignRows);
     setAgents(agentRows);
     setWorkflows(workflowRows);
     setDocuments(documentRows);
@@ -360,7 +355,7 @@ function Workspace({ session }: { session: Session }) {
   async function bootstrap() {
     await apiFetch("/bootstrap", { method: "POST", body: "{}" });
     await refresh();
-    setNotice("Default PPC/SEO agency workforce, Harbor Homeware workspace, and monthly operations workflow are ready.");
+    setNotice("Default document agents and the Document Operations Review workflow are ready.");
   }
 
   useEffect(() => {
@@ -368,12 +363,27 @@ function Workspace({ session }: { session: Session }) {
   }, []);
 
   const activeTitle = tabs.find(([id]) => id === active)?.[2] ?? "Workspace";
+  const pendingApprovals = approvals.filter((approval) => approval.status === "pending").length;
+  const completedRuns = runs.filter((run) => run.status === "completed").length;
+  const visibleAgentCount = agents.filter((agent) => !hiddenLegacyAgentNames.has(agent.name)).length;
 
   return (
     <div className="app-shell">
       <aside className="sidebar">
-        <div className="brand"><GitBranch size={22} /> ModelWeave</div>
-        <p className="small muted">Signed in as<br />{session.user.email}</p>
+        <div className="brand-card">
+          <span className="brand-mark"><GitBranch size={20} /></span>
+          <div>
+            <div className="brand">ModelWeave</div>
+            <p className="small muted">Document Agents</p>
+          </div>
+        </div>
+        <div className="workspace-card">
+          <p className="eyebrow">Account</p>
+          <p className="workspace-email">{session.user.email}</p>
+          <div className="row">
+            <StatusBadge status={providerConfigured ? "API key configured" : "API key missing"} />
+          </div>
+        </div>
         <nav className="nav">
           {tabs.map(([id, Icon, label]) => (
             <button key={id} className={active === id ? "active" : ""} onClick={() => setActive(id)}>
@@ -381,30 +391,34 @@ function Workspace({ session }: { session: Session }) {
             </button>
           ))}
         </nav>
-        <button onClick={() => supabase.auth.signOut()}><LogOut size={16} /> Sign out</button>
+        <div className="sidebar-metrics">
+          <span><strong>{visibleAgentCount}</strong><br />agents</span>
+          <span><strong>{documents.length}</strong><br />docs</span>
+          <span><strong>{pendingApprovals}</strong><br />pending</span>
+          <span><strong>{completedRuns}</strong><br />runs</span>
+        </div>
+        <button className="ghost signout-button" onClick={() => supabase.auth.signOut()}><LogOut size={16} /> Sign out</button>
       </aside>
       <main className="main">
         <div className="topbar">
           <div>
+            <p className="eyebrow">ModelWeave control plane</p>
             <h1>{activeTitle}</h1>
-            <p className="muted">Run an approval-gated AI workforce for PPC and SEO agency delivery.</p>
+            <p className="muted">Run approval-gated agents over a document database with audit trails and DOCX outputs.</p>
           </div>
-          <div className="row">
-            <StatusBadge status={providerConfigured ? "API key configured" : "API key missing"} />
+          <div className="topbar-actions">
+            <button className="primary" onClick={bootstrap}><Sparkles size={16} /> Create defaults</button>
             <button onClick={() => refresh()}><RefreshCw size={16} /> Refresh</button>
           </div>
         </div>
-        {notice && <p className="panel small">{notice}</p>}
+        {notice && <p className="notice-card small">{notice}</p>}
         {active === "setup" && <SetupPanel bootstrap={bootstrap} setNotice={setNotice} setProviderConfigured={setProviderConfigured} />}
-        {active === "clients" && <ClientsPanel clients={clients} refresh={refresh} setNotice={setNotice} />}
-        {active === "campaigns" && <CampaignsPanel clients={clients} campaigns={campaigns} refresh={refresh} setNotice={setNotice} />}
         {active === "documents" && <DocumentsPanel documents={documents} refresh={refresh} setNotice={setNotice} />}
         {active === "agents" && <AgentsPanel agents={agents} refresh={refresh} setNotice={setNotice} />}
         {active === "workflow" && <WorkflowPanel agents={agents} workflows={workflows} refresh={refresh} setNotice={setNotice} />}
-        {active === "run" && <RunPanel workflows={workflows} refresh={refresh} setNotice={setNotice} />}
+        {active === "run" && <RunPanel workflows={workflows} runs={runs} refresh={refresh} setNotice={setNotice} />}
         {active === "approvals" && <ApprovalsPanel approvals={approvals} refresh={refresh} setNotice={setNotice} />}
         {active === "tasks" && <TasksPanel tasks={tasks} />}
-        {active === "agency-runs" && <AgencyRunsPanel runs={runs} />}
         {active === "reports" && <ReportsPanel runs={runs} />}
       </main>
     </div>
@@ -434,131 +448,9 @@ function SetupPanel({ bootstrap, setNotice, setProviderConfigured }: {
         <button className="primary" disabled={!key} onClick={saveKey}><KeyRound size={16} /> Save key</button>
       </div>
       <div className="panel stack">
-        <h2>PPC/SEO agency workforce</h2>
-        <p className="muted">Create Harbor Homeware, agency campaigns, specialist agents, and the Monthly PPC/SEO Operations Review workflow.</p>
-        <button className="secondary" onClick={bootstrap}><GitBranch size={16} /> Create agency defaults</button>
-      </div>
-    </section>
-  );
-}
-
-function ClientsPanel({ clients, refresh, setNotice }: {
-  clients: ClientRow[];
-  refresh: () => Promise<void>;
-  setNotice: (message: string) => void;
-}) {
-  const empty = {
-    name: "",
-    industry: "",
-    goals: "",
-    tone: "Clear, practical, and client-ready.",
-    constraints: "Use synthetic data only.",
-    status: "active",
-  };
-  const [draft, setDraft] = useState(empty);
-
-  async function createClient() {
-    await apiFetch("/clients", { method: "POST", body: JSON.stringify(draft) });
-    setDraft(empty);
-    await refresh();
-    setNotice("Client workspace created.");
-  }
-
-  return (
-    <section className="grid two">
-      <div className="panel stack">
-        <h2>Create client workspace</h2>
-        <input placeholder="Client name" value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value })} />
-        <input placeholder="Industry" value={draft.industry} onChange={(event) => setDraft({ ...draft, industry: event.target.value })} />
-        <textarea placeholder="Goals" value={draft.goals} onChange={(event) => setDraft({ ...draft, goals: event.target.value })} />
-        <textarea placeholder="Constraints" value={draft.constraints} onChange={(event) => setDraft({ ...draft, constraints: event.target.value })} />
-        <button className="primary" disabled={!draft.name} onClick={createClient}><Users size={16} /> Create client</button>
-      </div>
-      <div className="panel">
-        <h2>Clients</h2>
-        <table className="table">
-          <thead><tr><th>Name</th><th>Industry</th><th>Goals</th><th>Status</th></tr></thead>
-          <tbody>
-            {clients.map((client) => (
-              <tr key={client.id}>
-                <td><strong>{client.name}</strong><br /><span className="small muted">{client.tone}</span></td>
-                <td>{client.industry}</td>
-                <td>{client.goals}</td>
-                <td><StatusBadge status={client.status} /></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </section>
-  );
-}
-
-function CampaignsPanel({ clients, campaigns, refresh, setNotice }: {
-  clients: ClientRow[];
-  campaigns: CampaignRow[];
-  refresh: () => Promise<void>;
-  setNotice: (message: string) => void;
-}) {
-  const [draft, setDraft] = useState({
-    client_id: "",
-    name: "",
-    channel: "ppc",
-    status: "active",
-    objective: "",
-    monthly_budget: "",
-    notes: "",
-  });
-
-  useEffect(() => {
-    if (!draft.client_id && clients[0]) setDraft((current) => ({ ...current, client_id: clients[0].id }));
-  }, [clients, draft.client_id]);
-
-  async function createCampaign() {
-    await apiFetch("/campaigns", {
-      method: "POST",
-      body: JSON.stringify({ ...draft, monthly_budget: draft.monthly_budget ? Number(draft.monthly_budget) : null }),
-    });
-    setDraft({ client_id: clients[0]?.id ?? "", name: "", channel: "ppc", status: "active", objective: "", monthly_budget: "", notes: "" });
-    await refresh();
-    setNotice("Campaign created.");
-  }
-
-  return (
-    <section className="grid two">
-      <div className="panel stack">
-        <h2>Create campaign</h2>
-        <select value={draft.client_id} onChange={(event) => setDraft({ ...draft, client_id: event.target.value })}>
-          {clients.map((client) => <option key={client.id} value={client.id}>{client.name}</option>)}
-        </select>
-        <input placeholder="Campaign name" value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value })} />
-        <select value={draft.channel} onChange={(event) => setDraft({ ...draft, channel: event.target.value })}>
-          <option value="ppc">PPC</option>
-          <option value="seo">SEO</option>
-          <option value="content">Content</option>
-          <option value="mixed">Mixed</option>
-        </select>
-        <textarea placeholder="Objective" value={draft.objective} onChange={(event) => setDraft({ ...draft, objective: event.target.value })} />
-        <input placeholder="Monthly budget" value={draft.monthly_budget} onChange={(event) => setDraft({ ...draft, monthly_budget: event.target.value })} />
-        <textarea placeholder="Notes" value={draft.notes} onChange={(event) => setDraft({ ...draft, notes: event.target.value })} />
-        <button className="primary" disabled={!draft.client_id || !draft.name} onClick={createCampaign}><BriefcaseBusiness size={16} /> Create campaign</button>
-      </div>
-      <div className="panel">
-        <h2>Campaigns</h2>
-        <table className="table">
-          <thead><tr><th>Name</th><th>Client</th><th>Channel</th><th>Objective</th><th>Budget</th></tr></thead>
-          <tbody>
-            {campaigns.map((campaign) => (
-              <tr key={campaign.id}>
-                <td><strong>{campaign.name}</strong><br /><span className="small muted">{campaign.status}</span></td>
-                <td>{campaign.client_name}</td>
-                <td><span className="badge badge-neutral">{campaign.channel}</span></td>
-                <td>{campaign.objective}</td>
-                <td>{campaign.monthly_budget ?? "N/A"}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <h2>Default document agents</h2>
+        <p className="muted">Create reusable document agents and a default workflow for retrieval, task proposals, approvals, evaluation, and DOCX export.</p>
+        <button className="secondary" onClick={bootstrap}><GitBranch size={16} /> Create defaults</button>
       </div>
     </section>
   );
@@ -620,11 +512,11 @@ function DocumentsPanel({ documents, refresh, setNotice }: {
       <div className="panel row">
         <input type="file" accept=".pdf,.txt,.md,.docx" onChange={(event) => setFile(event.target.files?.[0] ?? null)} />
         <button className="primary" disabled={!file} onClick={upload}><Upload size={16} /> Upload</button>
-        <button onClick={seed}><Database size={16} /> Load synthetic PPC/SEO corpus</button>
+        <button onClick={seed}><Database size={16} /> Load synthetic document corpus</button>
       </div>
       <div className="grid two">
         <div className="panel">
-          <h2>Indexed documents</h2>
+          <h2>Database documents</h2>
           <table className="table">
             <thead><tr><th>Name</th><th>Type</th><th>Chunks</th><th>Created</th><th>Manage</th></tr></thead>
             <tbody>
@@ -646,7 +538,7 @@ function DocumentsPanel({ documents, refresh, setNotice }: {
           </table>
         </div>
         <div className="panel stack">
-          <h2>{selected ? "Document details" : "Open a document"}</h2>
+          <h2>{selected ? "Database record" : "Open a database document"}</h2>
           {selected ? (
             <>
               <label className="stack small">Filename<input value={edit.filename} onChange={(event) => setEdit({ ...edit, filename: event.target.value })} /></label>
@@ -657,7 +549,7 @@ function DocumentsPanel({ documents, refresh, setNotice }: {
               <div className="document-preview"><MarkdownContent content={selected.content || "No indexed content available."} /></div>
             </>
           ) : (
-            <p className="muted">Use Open to read indexed document content, rename a document, update metadata, or delete it from the knowledge base.</p>
+            <p className="muted">Use Open to read indexed document content, rename a document, update metadata, or delete it from the database and vector index.</p>
           )}
         </div>
       </div>
@@ -670,41 +562,161 @@ function AgentsPanel({ agents, refresh, setNotice }: {
   refresh: () => Promise<void>;
   setNotice: (message: string) => void;
 }) {
-  const emptyAgent = { name: "", role: "", goal: "", model: "claude-sonnet-4-6", temperature: 0.2, tools: ["rag_retrieve"] };
+  const visibleAgents = agents.filter((agent) => !hiddenLegacyAgentNames.has(agent.name));
+  const emptyAgent = {
+    instructions: "",
+    name: "",
+    description: "",
+    model: "claude-sonnet-4-6",
+    trigger_type: "manual",
+    schedule: "",
+    status: "draft",
+  };
   const [draft, setDraft] = useState(emptyAgent);
+  const [selected, setSelected] = useState<AgentDetail | null>(null);
+  const [runPrompt, setRunPrompt] = useState("");
 
   async function createAgent() {
-    await apiFetch("/agents", { method: "POST", body: JSON.stringify(draft) });
+    const name = draft.name || agentNameFromInstructions(draft.instructions);
+    const payload = {
+      name,
+      role: "Document-grounded agent",
+      goal: draft.instructions,
+      description: draft.description || draft.instructions,
+      system_prompt: draft.instructions,
+      model: draft.model,
+      temperature: 0.2,
+      tools: ["rag_retrieve", "task_proposal", "docx_report"],
+      trigger_type: draft.trigger_type,
+      trigger_config: {
+        schedule: draft.trigger_type === "scheduled" ? draft.schedule || "daily" : "",
+        prompt: draft.instructions,
+      },
+      status: draft.status,
+      permission_mode: "approval_required",
+    };
+    const created = await apiFetch<Agent>("/agents", { method: "POST", body: JSON.stringify(payload) });
     setDraft(emptyAgent);
     await refresh();
-    setNotice("Agent created.");
+    await openAgent(created.id);
+    setNotice("Agent draft created.");
+  }
+
+  async function openAgent(agentId: string) {
+    const detail = await apiFetch<AgentDetail>(`/agents/${agentId}`);
+    setSelected(detail);
+    setRunPrompt(String(detail.trigger_config?.prompt || `Review the document database as ${detail.name} and propose next steps.`));
+  }
+
+  async function runAgent() {
+    if (!selected) return;
+    await apiFetch<RunResult>(`/agents/${selected.id}/run`, { method: "POST", body: JSON.stringify({ prompt: runPrompt }) });
+    await refresh();
+    await openAgent(selected.id);
+    setNotice("Agent run queued and background execution started.");
+  }
+
+  async function runScheduled() {
+    const result = await apiFetch<{ created_runs: number }>("/agents/scheduler/run-due", { method: "POST", body: "{}" });
+    await refresh();
+    setNotice(result.created_runs ? `${result.created_runs} scheduled run(s) started.` : "No scheduled agents are due right now.");
   }
 
   return (
     <section className="grid two">
       <div className="panel stack">
-        <h2>Create agent</h2>
-        <input placeholder="Name" value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value })} />
-        <input placeholder="Role" value={draft.role} onChange={(event) => setDraft({ ...draft, role: event.target.value })} />
-        <textarea placeholder="Goal" value={draft.goal} onChange={(event) => setDraft({ ...draft, goal: event.target.value })} />
+        <div className="section-heading">
+          <div>
+            <h2>Create agent</h2>
+            <p className="muted">Describe what the agent should do. ModelWeave turns it into a reusable document-grounded worker.</p>
+          </div>
+          <button onClick={runScheduled}><Clock3 size={16} /> Run due schedules</button>
+        </div>
+        <textarea
+          className="tall"
+          placeholder="Example: Review uploaded policy documents, find operational risks, cite evidence, and propose tasks that require approval before becoming final."
+          value={draft.instructions}
+          onChange={(event) => setDraft({ ...draft, instructions: event.target.value })}
+        />
+        <input placeholder="Optional name" value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value })} />
+        <textarea placeholder="Optional description" value={draft.description} onChange={(event) => setDraft({ ...draft, description: event.target.value })} />
         <input placeholder="Model" value={draft.model} onChange={(event) => setDraft({ ...draft, model: event.target.value })} />
-        <button className="primary" disabled={!draft.name || !draft.role} onClick={createAgent}>Create</button>
+        <div className="grid two compact-grid">
+          <label className="stack small">Trigger
+            <select value={draft.trigger_type} onChange={(event) => setDraft({ ...draft, trigger_type: event.target.value })}>
+              <option value="manual">Manual</option>
+              <option value="scheduled">Scheduled</option>
+            </select>
+          </label>
+          <label className="stack small">Status
+            <select value={draft.status} onChange={(event) => setDraft({ ...draft, status: event.target.value })}>
+              <option value="draft">Draft</option>
+              <option value="active">Active</option>
+              <option value="paused">Paused</option>
+            </select>
+          </label>
+        </div>
+        {draft.trigger_type === "scheduled" && (
+          <input placeholder="Schedule text, for example: daily, hourly, weekly" value={draft.schedule} onChange={(event) => setDraft({ ...draft, schedule: event.target.value })} />
+        )}
+        <button className="primary" disabled={!draft.instructions} onClick={createAgent}><Bot size={16} /> Create draft agent</button>
       </div>
-      <div className="panel">
-        <h2>Agents</h2>
-        <table className="table">
-          <tbody>
-            {agents.map((agent) => (
-              <tr key={agent.id}>
-                <td><strong>{agent.name}</strong><br /><span className="small muted">{agent.role}</span></td>
-                <td>{agent.goal}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="panel stack">
+        <h2>Reusable agents</h2>
+        <div className="agent-card-grid">
+          {visibleAgents.map((agent) => (
+            <button key={agent.id} className={`agent-card ${selected?.id === agent.id ? "selected" : ""}`} onClick={() => openAgent(agent.id)}>
+              <span className="row spread"><strong>{agent.name}</strong><StatusBadge status={agent.status} /></span>
+              <span className="small muted">{plainTextPreview(agent.description || agent.goal, 110)}</span>
+              <span className="row"><StatusBadge status={agent.trigger_type} /><span className="small muted">{agent.model}</span></span>
+            </button>
+          ))}
+        </div>
+        {visibleAgents.length === 0 && <EmptyState title="No agents yet" body="Create a draft agent from a plain-English instruction." />}
+        <div className="divider" />
+        <h2>{selected ? selected.name : "Agent details"}</h2>
+        {selected ? (
+          <div className="stack">
+            <div className="grid two compact-grid">
+              <div className="mini-card"><p className="eyebrow">Trigger</p><StatusBadge status={selected.trigger_type} /></div>
+              <div className="mini-card"><p className="eyebrow">Permission</p><StatusBadge status={selected.permission_mode} /></div>
+            </div>
+            <div className="mini-card">
+              <p className="eyebrow">System instructions</p>
+              <MarkdownContent content={selected.system_prompt || selected.goal} compact />
+            </div>
+            <div className="mini-card">
+              <p className="eyebrow">Tools</p>
+              <div className="row">{selected.tools.map((tool) => <span key={tool} className="badge badge-neutral">{tool}</span>)}</div>
+            </div>
+            <textarea value={runPrompt} onChange={(event) => setRunPrompt(event.target.value)} />
+            <button className="primary" disabled={!runPrompt} onClick={runAgent}><Play size={16} /> Run now</button>
+            <h3>Recent runs</h3>
+            {selected.runs.length ? (
+              <table className="table">
+                <thead><tr><th>Prompt</th><th>Status</th><th>Trigger</th><th>Created</th></tr></thead>
+                <tbody>
+                  {selected.runs.map((run) => (
+                    <tr key={run.id}>
+                      <td>{plainTextPreview(run.prompt, 120)}</td>
+                      <td><StatusBadge status={run.status} /></td>
+                      <td>{run.trigger_source || "manual"}</td>
+                      <td>{formatDate(run.created_at)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : <p className="small muted">No runs for this agent yet.</p>}
+          </div>
+        ) : <EmptyState title="No agent selected" body="Choose an agent to inspect its configuration and run history." />}
       </div>
     </section>
   );
+}
+
+function agentNameFromInstructions(instructions: string) {
+  const words = instructions.replace(/[^a-zA-Z0-9 ]/g, " ").split(/\s+/).filter(Boolean).slice(0, 4);
+  return words.length ? `${words.map((word) => word[0]?.toUpperCase() + word.slice(1).toLowerCase()).join(" ")} Agent` : "Document Agent";
 }
 
 function WorkflowPanel({ agents, workflows, refresh, setNotice }: {
@@ -714,11 +726,13 @@ function WorkflowPanel({ agents, workflows, refresh, setNotice }: {
   setNotice: (message: string) => void;
 }) {
   const [selectedId, setSelectedId] = useState("");
-  const selected = workflows.find((workflow) => workflow.id === selectedId) ?? workflows[0];
+  const defaultWorkflow = workflows.find((workflow) => workflow.name === "Document Operations Review") ?? workflows[0];
+  const selected = workflows.find((workflow) => workflow.id === selectedId) ?? defaultWorkflow;
   const [name, setName] = useState(selected?.name ?? "Custom Workflow");
   const [description, setDescription] = useState(selected?.description ?? "");
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
+  const visibleAgents = agents.filter((agent) => !hiddenLegacyAgentNames.has(agent.name));
 
   useEffect(() => {
     if (selected) {
@@ -732,9 +746,8 @@ function WorkflowPanel({ agents, workflows, refresh, setNotice }: {
 
   const nodeAgentIds = useMemo(() => new Set(nodes.map((node) => node.id)), [nodes]);
   const systemNodes = [
-    ["retrieve", "Retrieve agency knowledge"],
+    ["retrieve", "Retrieve database context"],
     ["create_task", "Queue approval-gated tasks"],
-    ["update_campaign", "Queue campaign update"],
     ["approval", "Human approval gate"],
     ["evaluate", "Evaluate run"],
     ["export_docx", "DOCX report available"],
@@ -792,7 +805,7 @@ function WorkflowPanel({ agents, workflows, refresh, setNotice }: {
           <input value={name} onChange={(event) => setName(event.target.value)} />
           <textarea value={description} onChange={(event) => setDescription(event.target.value)} />
           <h3>Available agents</h3>
-          {agents.map((agent) => (
+          {visibleAgents.map((agent) => (
             <button key={agent.id} onClick={() => addAgent(agent)} disabled={nodeAgentIds.has(agent.id)}>
               <Bot size={16} /> {agent.name}
             </button>
@@ -815,21 +828,25 @@ function WorkflowPanel({ agents, workflows, refresh, setNotice }: {
   );
 }
 
-function RunPanel({ workflows, refresh, setNotice }: {
+function RunPanel({ workflows, runs, refresh, setNotice }: {
   workflows: Workflow[];
+  runs: RunRow[];
   refresh: () => Promise<void>;
   setNotice: (message: string) => void;
 }) {
   const [workflowId, setWorkflowId] = useState("");
-  const [prompt, setPrompt] = useState("Prepare next month's PPC and SEO execution plan for Harbor Homeware.");
+  const [prompt, setPrompt] = useState("Review the current document database, identify grounded recommendations, queue approval-gated tasks, and produce a DOCX-ready summary.");
   const [running, setRunning] = useState(false);
   const [result, setResult] = useState<RunResult | null>(null);
-  const selectedWorkflow = workflows.find((workflow) => workflow.id === workflowId);
+  const [selectedHistory, setSelectedHistory] = useState<RunResult | null>(null);
+  const defaultWorkflow = workflows.find((workflow) => workflow.name === "Document Operations Review") ?? workflows[0];
+  const selectedWorkflow = workflows.find((workflow) => workflow.id === workflowId) ?? defaultWorkflow;
   const activeRun = Boolean(result && !terminalStatuses.includes(result.status));
+  const displayedRun = selectedHistory ?? result;
 
   useEffect(() => {
-    if (!workflowId && workflows[0]) setWorkflowId(workflows[0].id);
-  }, [workflows, workflowId]);
+    if (!workflowId && defaultWorkflow) setWorkflowId(defaultWorkflow.id);
+  }, [defaultWorkflow, workflowId]);
 
   useEffect(() => {
     if (!result || terminalStatuses.includes(result.status)) return;
@@ -837,6 +854,7 @@ function RunPanel({ workflows, refresh, setNotice }: {
       try {
         const next = await apiFetch<RunResult>(`/runs/${result.id}`);
         setResult(next);
+        if (selectedHistory?.id === next.id) setSelectedHistory(next);
         if (terminalStatuses.includes(next.status)) {
           await refresh();
           setNotice(next.status === "failed" ? "Workflow run failed." : "Workflow run finished.");
@@ -851,6 +869,7 @@ function RunPanel({ workflows, refresh, setNotice }: {
   async function run() {
     setRunning(true);
     setResult(null);
+    setSelectedHistory(null);
     try {
       const output = await apiFetch<RunResult>("/runs", { method: "POST", body: JSON.stringify({ workflow_id: workflowId, prompt }) });
       setResult(output);
@@ -860,51 +879,82 @@ function RunPanel({ workflows, refresh, setNotice }: {
     }
   }
 
+  async function inspect(runRow: RunRow) {
+    const detail = await apiFetch<RunResult>(`/runs/${runRow.id}`);
+    setSelectedHistory(detail);
+  }
+
   return (
     <section className="grid">
-      <div className="panel stack">
-        <select value={workflowId} onChange={(event) => setWorkflowId(event.target.value)}>
-          {workflows.map((workflow) => <option key={workflow.id} value={workflow.id}>{workflow.name}</option>)}
-        </select>
-        <textarea value={prompt} onChange={(event) => setPrompt(event.target.value)} />
-        <button className="primary" disabled={!workflowId || running || activeRun} onClick={run}>
-          {activeRun ? <Loader2 size={16} className="spin" /> : <Play size={16} />}
-          {activeRun ? "Agents running" : running ? "Starting..." : "Run agents"}
-        </button>
+      <div className="grid two">
+        <div className="panel stack">
+          <h2>Manual workflow run</h2>
+          <p className="muted">Runs start immediately, then pause only if an approval gate is reached.</p>
+          <select value={workflowId} onChange={(event) => setWorkflowId(event.target.value)}>
+            {workflows.map((workflow) => <option key={workflow.id} value={workflow.id}>{workflow.name}</option>)}
+          </select>
+          <textarea value={prompt} onChange={(event) => setPrompt(event.target.value)} />
+          <button className="primary" disabled={!workflowId || running || activeRun} onClick={run}>
+            {activeRun ? <Loader2 size={16} className="spin" /> : <Play size={16} />}
+            {activeRun ? "Agents running" : running ? "Starting..." : "Run workflow"}
+          </button>
+        </div>
+        <div className="panel">
+          <h2>Run history</h2>
+          {runs.length ? (
+            <table className="table">
+              <thead><tr><th>Run</th><th>Prompt</th><th>Trigger</th><th>Status</th><th>Inspect</th></tr></thead>
+              <tbody>
+                {runs.map((runRow) => (
+                  <tr key={runRow.id}>
+                    <td><strong>{runTitle(runRow)}</strong><br /><span className="small muted">{formatDate(runRow.created_at)}</span></td>
+                    <td>{plainTextPreview(runRow.prompt, 110)}</td>
+                    <td><StatusBadge status={runRow.trigger_source || "manual"} /></td>
+                    <td><StatusBadge status={runRow.status} /></td>
+                    <td><button onClick={() => inspect(runRow)}><BarChart3 size={16} /> Open</button></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : <EmptyState title="No runs yet" body="Run a workflow or agent to create execution history." />}
+        </div>
       </div>
-      {result && (
+      {displayedRun && (
         <div className="grid">
           <div className="panel stack">
             <div className="run-header">
               <div>
-                <h2>{result.workflow_name ?? selectedWorkflow?.name ?? "Workflow run"}</h2>
-                <p className="muted">{result.current_node_label || plainTextPreview(result.prompt, 120)}</p>
+                <h2>{displayedRun.workflow_name ?? displayedRun.agent_name ?? selectedWorkflow?.name ?? "Run"}</h2>
+                <p className="muted">{displayedRun.current_node_label || plainTextPreview(displayedRun.prompt, 120)}</p>
               </div>
-              <StatusBadge status={result.status} />
+              <div className="row">
+                <StatusBadge status={displayedRun.trigger_source || "manual"} />
+                <StatusBadge status={displayedRun.status} />
+              </div>
             </div>
-            <RunProgressFlow result={result} workflow={selectedWorkflow} />
-            {result.error_message && <p className="error-text"><AlertCircle size={16} /> {result.error_message}</p>}
+            <RunProgressFlow result={displayedRun} workflow={selectedWorkflow} />
+            {displayedRun.error_message && <p className="error-text"><AlertCircle size={16} /> {displayedRun.error_message}</p>}
           </div>
           <div className="grid two">
           <div className="panel stack">
             <h2>Final output</h2>
-            {result.evaluation && <ScoreCard evaluation={result.evaluation} />}
-            <div className="report-preview"><MarkdownContent content={result.output} /></div>
-            <button onClick={() => downloadRun(result.id)}><Download size={16} /> Download DOCX</button>
+            {displayedRun.evaluation && <ScoreCard evaluation={displayedRun.evaluation} />}
+            <div className="report-preview"><MarkdownContent content={displayedRun.output} /></div>
+            <button onClick={() => downloadRun(displayedRun.id)}><Download size={16} /> Download DOCX</button>
           </div>
           <div className="panel stack">
             <h2>Execution timeline</h2>
-            <EventTimeline events={result.events} />
+            <EventTimeline events={displayedRun.events} />
             <h2>Approval-gated actions</h2>
-            {result.approvals.length ? result.approvals.map((approval) => (
+            {displayedRun.approvals.length ? displayedRun.approvals.map((approval) => (
               <div key={approval.id} className="mini-card">
                 <div className="row spread"><strong>{approval.title}</strong><StatusBadge status={approval.status} /></div>
                 <MarkdownContent content={approval.summary} compact />
               </div>
             )) : <p className="small muted">No approval-gated actions yet.</p>}
             <h2>Agent trace and sources</h2>
-            {result.trace.map((item, index) => <details key={index} className="trace-item"><summary>{item.agent_name}</summary><MarkdownContent content={item.output} /></details>)}
-            <CitationList citations={result.citations} />
+            {displayedRun.trace.map((item, index) => <details key={index} className="trace-item"><summary>{item.agent_name}</summary><MarkdownContent content={item.output} /></details>)}
+            <CitationList citations={displayedRun.citations} />
           </div>
           </div>
         </div>
@@ -1043,11 +1093,11 @@ function ApprovalsPanel({ approvals, refresh, setNotice }: {
       <div className="section-heading">
         <div>
           <h2>Human approval queue</h2>
-          <p className="muted">Persistent task and campaign changes stay pending until a human decision is recorded.</p>
+          <p className="muted">Persistent task changes stay pending until a human decision is recorded.</p>
         </div>
         <StatusBadge status={`${approvals.filter((approval) => approval.status === "pending").length} pending`} />
       </div>
-      {approvals.length === 0 ? <EmptyState title="No approvals yet" body="Run the Monthly PPC/SEO Operations Review workflow to queue approval-gated actions." /> : (
+      {approvals.length === 0 ? <EmptyState title="No approvals yet" body="Run a workflow or agent to queue approval-gated task proposals." /> : (
         <div className="approval-grid">
           {approvals.map((approval) => (
             <article key={approval.id} className="approval-card">
@@ -1078,15 +1128,15 @@ function ApprovalsPanel({ approvals, refresh, setNotice }: {
 function TasksPanel({ tasks }: { tasks: AgencyTaskRow[] }) {
   return (
     <section className="panel">
-      <h2>Agency tasks</h2>
+      <h2>Approved task queue</h2>
+      <p className="muted">Tasks are durable follow-up work items created by agents after approval decisions.</p>
       <table className="table">
-        <thead><tr><th>Task</th><th>Client</th><th>Campaign</th><th>Discipline</th><th>Priority</th><th>Status</th></tr></thead>
+        <thead><tr><th>Task</th><th>Workspace</th><th>Discipline</th><th>Priority</th><th>Status</th></tr></thead>
         <tbody>
           {tasks.map((task) => (
             <tr key={task.id}>
               <td><strong>{task.title}</strong><MarkdownContent content={task.description} compact /></td>
-              <td>{task.client_name ?? "N/A"}</td>
-              <td>{task.campaign_name ?? "N/A"}</td>
+              <td>{task.client_name ?? "Document workspace"}</td>
               <td>{task.discipline}</td>
               <td>{task.priority}</td>
               <td><StatusBadge status={task.status} /></td>
@@ -1094,47 +1144,6 @@ function TasksPanel({ tasks }: { tasks: AgencyTaskRow[] }) {
           ))}
         </tbody>
       </table>
-    </section>
-  );
-}
-
-function AgencyRunsPanel({ runs }: { runs: RunRow[] }) {
-  const [selectedRun, setSelectedRun] = useState<RunResult | null>(null);
-
-  async function inspect(run: RunRow) {
-    setSelectedRun(await apiFetch<RunResult>(`/runs/${run.id}`));
-  }
-
-  return (
-    <section className="grid two">
-      <div className="panel">
-        <h2>Agency runs</h2>
-        <table className="table">
-          <thead><tr><th>Workflow</th><th>Prompt</th><th>Status</th><th>Score</th><th>Inspect</th></tr></thead>
-          <tbody>
-            {runs.map((run) => (
-              <tr key={run.id}>
-                <td>{run.workflow_name ?? run.workflow_id}</td>
-                <td>{plainTextPreview(run.prompt, 140)}</td>
-                <td><StatusBadge status={run.status} /></td>
-                <td>{run.overall_score ?? "N/A"}</td>
-                <td><button onClick={() => inspect(run)}><BarChart3 size={16} /> Timeline</button></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <div className="panel stack">
-        <h2>{selectedRun ? "Run timeline" : "Select a run"}</h2>
-        {selectedRun ? (
-          <>
-            <div className="row spread"><StatusBadge status={selectedRun.status} /><span className="small muted">{formatDate(selectedRun.created_at)}</span></div>
-            {selectedRun.evaluation && <ScoreCard evaluation={selectedRun.evaluation} />}
-            <RunProgressFlow result={selectedRun} />
-            <EventTimeline events={selectedRun.events} />
-          </>
-        ) : <EmptyState title="No run selected" body="Choose a run to inspect its timeline, status, evaluation, and workflow graph." />}
-      </div>
     </section>
   );
 }
@@ -1155,7 +1164,7 @@ function ReportsPanel({ runs }: { runs: RunRow[] }) {
           <tbody>
             {runs.map((run) => (
               <tr key={run.id}>
-                <td><strong>{reportTitle(run.output)}</strong><br /><span className="small muted">{plainTextPreview(run.prompt, 110)}</span></td>
+                <td><strong>{reportTitle(run.output)}</strong><br /><span className="small muted">{runTitle(run)} - {plainTextPreview(run.prompt, 110)}</span></td>
                 <td><StatusBadge status={run.status} /></td>
                 <td>{run.overall_score ?? "N/A"}</td>
                 <td>{formatDate(run.created_at)}</td>

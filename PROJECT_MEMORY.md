@@ -73,6 +73,46 @@ Known rule/template documents:
 
 ## Activity Log
 
+### 2026-06-05
+
+Current task:
+- Implementing the ModelWeave product simplification and agent execution upgrade.
+- Pivoting the visible app from PPC/SEO campaign operations to an academic document-agent platform centered on Database, Agents, Workflows, Runs, Approvals, Tasks, and Reports.
+
+Planned changes in progress:
+- Remove Campaigns and Agency Runs from the user-facing navigation while keeping legacy campaign tables/endpoints for compatibility.
+- Rename Documents to Database in the UI and keep upload/open/edit/delete/seed behavior.
+- Extend agents with description, system prompt, trigger configuration, status, and permission mode.
+- Simplify default workflow nodes to retrieve, agent, create_task, approval, evaluate, and export_docx.
+- Ensure manual runs leave queued/pending state immediately and only pause for approvals.
+
+Checks run so far:
+- Read current project memory.
+- Inspected current git status and searched frontend/backend for campaign, run, agent, and workflow surfaces.
+- `backend/.venv/bin/python -m compileall backend/app`
+- `npm run build` from `frontend/`
+- Local backend started on `http://127.0.0.1:8000` with CORS for `localhost:3001`.
+- Local frontend started on `http://localhost:3001`.
+- Browser QA confirmed navigation now shows Setup, Database, Agents, Workflows, Runs, Approvals, Tasks, Reports.
+- Browser QA confirmed Workflows defaults to `Document Operations Review`, with generic retrieve/task/approval/evaluate/export nodes and no visible campaign update node.
+
+Completed so far:
+- Added migration `004_agent_execution_metadata.sql` for richer agent metadata and run trigger metadata.
+- Changed default bootstrap to create a generic document operations workflow and document/database agents.
+- Stopped default workspace bootstrap from creating campaigns.
+- Added backend support for queued workflow runs, single-agent runs, and scheduled-agent run creation.
+- Changed task proposals to document-grounded research/operations/reporting tasks instead of campaign actions.
+- Removed Campaigns, Clients, and Agency Runs from the frontend navigation.
+- Renamed Documents to Database in the visible UI.
+- Added a plain-English agent creation flow with manual/scheduled trigger controls, draft/active/paused status, detail inspector, recent runs, Run now, and Run due schedules.
+- Unified run inspection into the Runs screen for manual and scheduled runs.
+- Removed campaign fields from visible task tables and approval copy.
+- Hid legacy generated PPC/SEO specialist agents from visible agent lists while preserving stored data.
+
+Next actions:
+- Optional: deploy backend to Railway so migration `004_agent_execution_metadata.sql` applies in production, then deploy frontend to Vercel.
+- Optional: clean or archive older historical demo runs/workflows if the demo account should not show previous PPC/SEO prompts in run history.
+
 ### 2026-05-21
 
 - Created `PROJECT_MEMORY.md`.
@@ -370,3 +410,213 @@ Next actions:
 - Apply the new migration to the configured database.
 - Run authenticated local smoke tests for non-blocking runs, polling, events, DOCX export, and approvals.
 - Render a generated DOCX report to verify no raw markdown remains.
+
+### 2026-05-27
+
+Current task:
+- Creating a new full English-only diploma thesis DOCX for the approved title, following the `Правила` samples and targeting about 45 pages of main body content.
+
+Status:
+- Re-read `PROJECT_MEMORY.md` and inspected `Правила` template documents before generating the new paper.
+- Confirmed the university sample formatting uses A4 pages, Times New Roman 14 pt, 1.5 line spacing, and margins of approximately left 2.5 cm, right 1 cm, top/bottom 2 cm.
+- Confirmed the prior English thesis is too short for the new requirement: about 5,839 words.
+- Verified current production links for inclusion in the paper: frontend `https://modelweave-six.vercel.app`, backend `https://api-production-e70a9.up.railway.app`, repository `https://github.com/serhiiSotskyi/multi-agent-knowledge-platform`.
+- Verified available evidence assets under `evidence/figures`, `evidence/screenshots`, `evidence/tests`, and `evidence/reports`.
+
+Next actions:
+- Generate the new DOCX as a separate full thesis artifact rather than overwriting the previous short thesis.
+- Use native Word/OMML equation objects for mathematical formulas.
+- Render the DOCX to PNG/PDF for visual QA and iterate on layout if needed.
+
+Result:
+- Created new full English thesis artifact: `ModelWeave_Diploma_Thesis_EN_Full.docx`.
+- Created repeatable builder script: `scripts/build_full_thesis_docx.py`.
+- Created reference trace file: `evidence/references/full-thesis-sources-2026-05-27.json`.
+- Rendered the thesis to `evidence/rendered-thesis-en-full/` with a PDF and 54 page PNGs for visual QA.
+- Final rendered structure: Introduction starts on page 6, References start on page 51, so the main body is exactly 45 rendered pages.
+- Final structural check: 11,616 words, 421 paragraphs, 14 tables, 54 native Word/OMML equation objects, 11 images, 32 English-language references, 0 raw markdown bold markers, and 0 raw markdown table separators.
+- Production links are included in the DOCX source text: `https://modelweave-six.vercel.app`, `https://api-production-e70a9.up.railway.app`, and `https://github.com/serhiiSotskyi/multi-agent-knowledge-platform`.
+
+Commands or checks run:
+- `python3 scripts/build_full_thesis_docx.py`
+- `render_docx.py ModelWeave_Diploma_Thesis_EN_Full.docx --output_dir evidence/rendered-thesis-en-full --emit_pdf`
+- `pdftotext -layout evidence/rendered-thesis-en-full/ModelWeave_Diploma_Thesis_EN_Full.pdf /tmp/modelweave_full_thesis.txt`
+- Python DOCX structure check for words, paragraphs, tables, equation objects, images, markdown artifacts, references, and production links.
+- Visual inspection of representative rendered pages: title page, contents, mathematical model/equations, architecture section, testing section, references, and appendices.
+
+Open questions or next steps:
+- Confirm whether the university wants the title page fields translated back to Ukrainian or kept English-only as requested.
+- If exact department/group metadata differs from the placeholders used here, update the title page before official submission.
+
+### 2026-05-27
+
+Current task:
+- Creating a full Ukrainian translation/adaptation of `ModelWeave_Diploma_Thesis_EN_Full.docx` for supervisor review.
+
+Status:
+- Re-read project memory and document-generation instructions.
+- Plan is to create a separate Ukrainian DOCX, preserve the same core thesis structure, formulas, figures, tables, production links, references, and appendices, and render-check the result.
+
+Next actions:
+- Generate `ModelWeave_Diploma_Thesis_UA_Full.docx`.
+- Verify native Word/OMML equations remain rendered formulas.
+- Render the DOCX to page PNGs/PDF and inspect representative pages.
+
+Result:
+- Created Ukrainian supervisor-review thesis artifact: `ModelWeave_Diploma_Thesis_UA_Full.docx`.
+- Created repeatable Ukrainian builder script: `scripts/build_full_thesis_docx_ua.py`.
+- Created Ukrainian reference trace file: `evidence/references/full-thesis-sources-ua-2026-05-27.json`.
+- Corrected the manually generated Ukrainian table of contents page numbers after visual render inspection.
+- Rendered the Ukrainian thesis to `evidence/rendered-thesis-ua-full/` with a PDF and 40 page PNGs for visual QA.
+- Final structural check: 5,485 approximate words, 362 paragraphs, 14 tables, 81 Word/OMML equation XML items, 11 embedded images, 32 English-language references, 0 raw markdown bold markers, 0 raw markdown table separators, and 0 markdown heading markers.
+- Production links are included in the DOCX source text: `https://modelweave-six.vercel.app`, `https://api-production-e70a9.up.railway.app`, and `https://github.com/serhiiSotskyi/multi-agent-knowledge-platform`.
+- Visual inspection covered the title page, contents, mathematical formulas/figures, references, and appendices.
+
+Commands or checks run:
+- `python3 scripts/build_full_thesis_docx_ua.py`
+- `render_docx.py ModelWeave_Diploma_Thesis_UA_Full.docx --output_dir evidence/rendered-thesis-ua-full --emit_pdf`
+- `pdftotext -layout evidence/rendered-thesis-ua-full/ModelWeave_Diploma_Thesis_UA_Full.pdf /tmp/modelweave_ua_full_thesis.txt`
+- Python DOCX structure check for rendered page count, paragraphs, tables, word count, equation XML items, embedded images, reference count, markdown artifacts, synthetic-data statement, and production links.
+
+Open questions or next steps:
+- This Ukrainian file is a supervisor-review translation/adaptation of the full English thesis, while the official thesis artifact remains the English-only full version requested earlier.
+- If the supervisor requires a near page-for-page Ukrainian version, expand this copy further toward the English 54-page length before sharing as a final official Ukrainian submission.
+
+### 2026-05-27
+
+Current task:
+- Creating an English 15-minute small-defense presentation for the ModelWeave diploma project.
+
+Status:
+- Started PPTX generation after reading project memory and the presentation tooling instructions.
+- Target output: `ModelWeave_Small_Defense_Presentation_EN.pptx`.
+- Deck structure follows the supervisor's required seven slides plus one final demo slide.
+- Evidence source assets: thesis figures, production screenshots, test JSON metrics, production frontend/backend links, and repository link.
+
+Next actions:
+- Generate a professional editable PPTX with speaker notes.
+- Render PNG/PDF previews and visually inspect all slides.
+- Record verification results and final paths here.
+
+Result:
+- Created final English small-defense deck: `ModelWeave_Small_Defense_Presentation_EN.pptx`.
+- Deck has 8 slides: Topic, Goal and Tasks, Relevance, Methods and Comparison, Structural Scheme, Results, Conclusions, and Demo Link.
+- Added speaker notes to all 8 slides with timing guidance for a maximum 15-minute defense.
+- Used existing project evidence: architecture, RAG pipeline, workflow graph, production screenshots, test metrics, production frontend/backend links, and repository link.
+- Created QR code asset for `https://modelweave-six.vercel.app`.
+- Rendered PNG previews and contact sheet under `outputs/manual-20260527-defense/presentations/modelweave-small-defense/`.
+- Created PDF preview: `outputs/manual-20260527-defense/presentations/modelweave-small-defense/output/ModelWeave_Small_Defense_Presentation_EN.pdf`.
+
+Commands or checks run:
+- `python3 - <<'PY' ... qrcode ... PY`
+- `node build_artifact_deck.mjs --slide-count 8 --slide-size 1280x720`
+- Visual inspection of rendered contact sheet and slides 1-8.
+- `soffice --headless --convert-to pdf --outdir ... ModelWeave_Small_Defense_Presentation_EN.pptx`
+- PPTX archive check: 8 slides, 8 notes slides, production frontend/backend/repository links present, and no Cyrillic text in slide XML.
+- `pdfinfo` check: rendered PDF has 8 pages.
+
+Open questions or next steps:
+- If the university later provides an official PowerPoint template, recreate the same content in that template.
+- If a live demo is required instead of a link-only demo, rehearse the five-step path on the production app before defense.
+
+### 2026-05-28
+
+Current task:
+- Expanding the English small-defense presentation speaker notes so the user can read them directly during the defense.
+
+Result:
+- Updated `ModelWeave_Small_Defense_Presentation_EN.pptx` with full read-aloud speaker notes under all 8 slides.
+- The notes now include slide-by-slide speaking scripts, timing cues, transitions, and the demo closing.
+- Total speaker-note script length is about 1,601 words, estimated at about 11 minutes at 145 words per minute, leaving buffer under the 15-minute maximum.
+- Slide visuals were preserved.
+
+Commands or checks run:
+- `node build_artifact_deck.mjs --slide-count 8 --slide-size 1280x720`
+- `soffice --headless --convert-to pdf --outdir ... ModelWeave_Small_Defense_Presentation_EN.pptx`
+- PPTX archive check: 8 slides, 8 notes slides, all production links present, no Cyrillic text, expanded notes present, estimated timing under 15 minutes.
+- `pdfinfo` check: rendered PDF has 8 pages.
+
+Open questions or next steps:
+- Rehearse the script once aloud; if speaking speed is slower than 110 words per minute, shorten slide 4 or slide 5 notes before presenting.
+
+### 2026-06-04
+
+Current task:
+- Restyling the ModelWeave frontend to a dark workspace-control-plane design while preserving existing Supabase/FastAPI functionality.
+
+Status:
+- Re-read `PROJECT_MEMORY.md` and inspected current git status before editing.
+- Confirmed there are unrelated existing thesis, evidence, output, and script changes in the workspace; this task will avoid touching those artifacts.
+- Inspected a prior visual reference: dark shell, emerald primary actions, compact cards, sticky header, icon nav, status badges, clean tables, and empty states.
+
+Next actions:
+- Update frontend CSS and minimal markup in `frontend/app/page.tsx`.
+- Run the frontend build and local visual checks.
+
+Result:
+- Replaced the light frontend theme with a dark workspace control-plane design using plain CSS and existing dependencies.
+- Updated the signed-out auth panel with dark product framing, brand mark, segmented sign-in/register controls, and clearer demo positioning.
+- Updated the signed-in app shell with a fixed dark sidebar, branded workspace card, account/API status card, icon tab navigation, compact sidebar metrics, sticky topbar, and dark notice styling.
+- Restyled existing panels, tables, forms, badges, markdown previews, document/report previews, approval cards, empty states, React Flow workflow canvases, live run nodes, timelines, traces, and citations without changing backend APIs or data contracts.
+
+Files touched:
+- `frontend/app/globals.css`
+- `frontend/app/page.tsx`
+- `PROJECT_MEMORY.md`
+
+Commands or checks run:
+- `npm run build` from `frontend/`
+- Started local Next dev server on `http://localhost:3001` because port 3000 was already in use.
+- Playwright visual check of signed-out auth page at desktop and mobile sizes.
+- Playwright visual check of signed-in shell using a mocked local Supabase session; tab spot-checks covered Documents, Workflow, Run, Approvals, and Reports with no browser-visible runtime errors.
+- Stopped the temporary local dev server on port 3001.
+- Final `npm run build` from `frontend/`
+
+Open questions or next steps:
+- Run a real authenticated smoke test when Supabase/Railway DNS is reachable from the local environment; DNS lookup for the Supabase host failed during this session, so the signed-in visual check used a mocked browser session and expected API fetch failures.
+- Deploy the frontend to Vercel after the user reviews the local UI.
+
+### 2026-06-05
+
+Current task:
+- Production-readiness QA pass for the simplified ModelWeave document-agent platform.
+
+Status:
+- Local backend was running on `http://127.0.0.1:8000`.
+- Local frontend was running on `http://localhost:3001`.
+- Re-read this memory before testing, per project instructions.
+
+Result:
+- Backend health and frontend localhost checks passed.
+- Backend compile check passed.
+- Frontend production build passed before and after the metadata cleanup.
+- Authenticated isolated smoke test passed with a temporary confirmed Supabase user and real local API calls.
+- Smoke test verified BYOK Anthropic key storage, default bootstrap, synthetic corpus loading, Markdown document upload/open/rename/delete, default document agents, custom agent creation/detail, custom workflow creation, manual workflow run execution, live queued-to-running transition, RAG citations, run trace events, evaluation scores, approval creation, approval/reject decisions, task state changes, DOCX report download, unified run history, manual agent run, scheduled agent run creation/execution, and cleanup of temporary test data.
+- UI browser pass confirmed the simplified navigation exists: Setup, Database, Agents, Workflows, Runs, Approvals, Tasks, Reports.
+- UI browser pass confirmed Database has upload/load/open/delete surfaces, Agents has create/detail/schedule controls, Workflows has simplified execution nodes, Runs has manual run and history, Approvals has the human approval queue, Tasks has the durable task queue, and Reports has preview/DOCX actions.
+- Captured QA screenshots:
+  - `evidence/screenshots/qa-ui-workflows-2026-06-05.png`
+  - `evidence/screenshots/qa-ui-runs-2026-06-05.png`
+  - `evidence/screenshots/qa-ui-tasks-2026-06-05.png`
+- Updated frontend metadata to remove the old PPC/SEO product description and match the current document-agent academic framing.
+
+Files touched:
+- `frontend/app/layout.tsx`
+- `evidence/screenshots/qa-ui-workflows-2026-06-05.png`
+- `evidence/screenshots/qa-ui-runs-2026-06-05.png`
+- `evidence/screenshots/qa-ui-tasks-2026-06-05.png`
+- `PROJECT_MEMORY.md`
+
+Commands or checks run:
+- `curl -sS -m 5 http://127.0.0.1:8000/api/health`
+- `curl -sS -m 5 -I http://localhost:3001/`
+- `backend/.venv/bin/python -m compileall backend/app`
+- `npm run build` from `frontend/`
+- Authenticated Python smoke test using Supabase Auth REST, local FastAPI endpoints, Anthropic API, Supabase Postgres, and Qdrant.
+- Browser UI inspection through the Codex in-app browser at `http://localhost:3001/`.
+- `rg -n "Campaigns|campaign update|Agency Runs|PPC/SEO|PPC|SEO|Harbor Homeware|agency operations" frontend/app frontend/components frontend/lib`
+
+Open questions or next steps:
+- The code path is production-ready locally, but the latest frontend/backend changes have not been deployed in this QA pass.
+- The current signed-in demo account still contains old historical workflows/runs/tasks from earlier PPC/SEO and dinner-test experiments. A new user is clean, but the demo account should be cleaned or reset before a formal demonstration if historical rows should not appear.
+- Legacy campaign endpoints and database tables remain in the backend for compatibility as planned; they are not exposed in the simplified UI.

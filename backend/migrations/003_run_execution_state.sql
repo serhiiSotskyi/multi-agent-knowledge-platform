@@ -8,7 +8,7 @@ alter table runs
 
 update runs
 set status = 'completed'
-where status not in ('pending', 'running', 'waiting_approval', 'completed', 'failed');
+where status not in ('queued', 'pending', 'running', 'waiting_approval', 'completed', 'failed');
 
 create index if not exists idx_runs_status on runs(status);
 create index if not exists idx_runs_created_at on runs(created_at);

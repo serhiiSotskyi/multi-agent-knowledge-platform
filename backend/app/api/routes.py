@@ -10,7 +10,15 @@ from app.core.config import get_settings
 from app.core.security import CurrentUser, get_current_user
 from app.db.database import run_one, run_query
 from app.services.agency import approve_action, ensure_agency_defaults, reject_action
-from app.services.agents import bootstrap_defaults, create_workflow_run, execute_workflow_run, get_run_detail
+from app.services.agents import (
+    bootstrap_defaults,
+    create_agent_run,
+    create_due_scheduled_agent_runs,
+    create_workflow_run,
+    execute_agent_run,
+    execute_workflow_run,
+    get_run_detail,
+)
 from app.services.documents import chunk_text, extract_text
 from app.services.provider_keys import has_provider_key, save_provider_key
 from app.services.reports import build_run_docx
@@ -26,11 +34,17 @@ class ProviderKeyIn(BaseModel):
 
 class AgentIn(BaseModel):
     name: str
-    role: str
+    role: str = "Document-grounded agent"
     goal: str = ""
+    description: str = ""
+    system_prompt: str = ""
     model: str | None = None
     temperature: float = 0.2
-    tools: list[str] = Field(default_factory=lambda: ["rag_retrieve"])
+    tools: list[str] = Field(default_factory=lambda: ["rag_retrieve", "task_proposal", "docx_report"])
+    trigger_type: str = "manual"
+    trigger_config: dict = Field(default_factory=dict)
+    status: str = "draft"
+    permission_mode: str = "approval_required"
 
 
 class WorkflowIn(BaseModel):
@@ -42,6 +56,10 @@ class WorkflowIn(BaseModel):
 
 class RunIn(BaseModel):
     workflow_id: str
+    prompt: str = Field(min_length=3)
+
+
+class AgentRunIn(BaseModel):
     prompt: str = Field(min_length=3)
 
 
@@ -296,26 +314,66 @@ def list_agents(user: CurrentUser = Depends(get_current_user)) -> list[dict]:
     return run_query("select * from agents where user_id = %(user_id)s order by created_at", {"user_id": user.id})
 
 
+@router.post("/agents/scheduler/run-due")
+async def run_due_scheduled_agents(background_tasks: BackgroundTasks, user: CurrentUser = Depends(get_current_user)) -> dict:
+    runs = create_due_scheduled_agent_runs(user.id)
+    for run in runs:
+        background_tasks.add_task(execute_agent_run, user.id, run["id"])
+    return {"created_runs": len(runs), "runs": runs}
+
+
 @router.post("/agents")
 def create_agent(body: AgentIn, user: CurrentUser = Depends(get_current_user)) -> dict:
     agent_id = str(uuid4())
+    system_prompt = body.system_prompt or body.goal or body.description or "Use retrieved documents to complete the requested task."
+    description = body.description or body.goal or system_prompt[:240]
     run_query(
         """
-        insert into agents (id, user_id, name, role, goal, model, temperature, tools)
-        values (%(id)s, %(user_id)s, %(name)s, %(role)s, %(goal)s, %(model)s, %(temperature)s, %(tools)s::jsonb)
+        insert into agents
+          (id, user_id, name, role, goal, description, system_prompt, model, temperature, tools,
+           trigger_type, trigger_config, status, permission_mode)
+        values
+          (%(id)s, %(user_id)s, %(name)s, %(role)s, %(goal)s, %(description)s, %(system_prompt)s,
+           %(model)s, %(temperature)s, %(tools)s::jsonb, %(trigger_type)s, %(trigger_config)s::jsonb,
+           %(status)s, %(permission_mode)s)
         """,
         {
             "id": agent_id,
             "user_id": user.id,
             "name": body.name,
             "role": body.role,
-            "goal": body.goal,
+            "goal": body.goal or description,
+            "description": description,
+            "system_prompt": system_prompt,
             "model": body.model or get_settings().anthropic_model,
             "temperature": body.temperature,
             "tools": Jsonb(body.tools),
+            "trigger_type": body.trigger_type,
+            "trigger_config": Jsonb(body.trigger_config),
+            "status": body.status,
+            "permission_mode": body.permission_mode,
         },
     )
     return run_one("select * from agents where id = %(id)s", {"id": agent_id})
+
+
+@router.get("/agents/{agent_id}")
+def get_agent(agent_id: str, user: CurrentUser = Depends(get_current_user)) -> dict:
+    agent = run_one("select * from agents where id = %(id)s and user_id = %(user_id)s", {"id": agent_id, "user_id": user.id})
+    if not agent:
+        raise HTTPException(status_code=404, detail="Agent not found")
+    agent["runs"] = run_query(
+        """
+        select id, prompt, output, status, trigger_source, current_node_label, error_message,
+               created_at, started_at, completed_at
+        from runs
+        where user_id = %(user_id)s and agent_id = %(agent_id)s
+        order by created_at desc
+        limit 10
+        """,
+        {"user_id": user.id, "agent_id": agent_id},
+    )
+    return agent
 
 
 @router.put("/agents/{agent_id}")
@@ -323,11 +381,15 @@ def update_agent(agent_id: str, body: AgentIn, user: CurrentUser = Depends(get_c
     row = run_one("select id from agents where id = %(id)s and user_id = %(user_id)s", {"id": agent_id, "user_id": user.id})
     if not row:
         raise HTTPException(status_code=404, detail="Agent not found")
+    system_prompt = body.system_prompt or body.goal or body.description or "Use retrieved documents to complete the requested task."
+    description = body.description or body.goal or system_prompt[:240]
     run_query(
         """
         update agents
-        set name=%(name)s, role=%(role)s, goal=%(goal)s, model=%(model)s,
-            temperature=%(temperature)s, tools=%(tools)s::jsonb, updated_at=now()
+        set name=%(name)s, role=%(role)s, goal=%(goal)s, description=%(description)s,
+            system_prompt=%(system_prompt)s, model=%(model)s, temperature=%(temperature)s,
+            tools=%(tools)s::jsonb, trigger_type=%(trigger_type)s, trigger_config=%(trigger_config)s::jsonb,
+            status=%(status)s, permission_mode=%(permission_mode)s, updated_at=now()
         where id=%(id)s and user_id=%(user_id)s
         """,
         {
@@ -335,13 +397,26 @@ def update_agent(agent_id: str, body: AgentIn, user: CurrentUser = Depends(get_c
             "user_id": user.id,
             "name": body.name,
             "role": body.role,
-            "goal": body.goal,
+            "goal": body.goal or description,
+            "description": description,
+            "system_prompt": system_prompt,
             "model": body.model or get_settings().anthropic_model,
             "temperature": body.temperature,
             "tools": Jsonb(body.tools),
+            "trigger_type": body.trigger_type,
+            "trigger_config": Jsonb(body.trigger_config),
+            "status": body.status,
+            "permission_mode": body.permission_mode,
         },
     )
     return run_one("select * from agents where id = %(id)s", {"id": agent_id})
+
+
+@router.post("/agents/{agent_id}/run")
+async def run_agent(agent_id: str, body: AgentRunIn, background_tasks: BackgroundTasks, user: CurrentUser = Depends(get_current_user)) -> dict:
+    run = create_agent_run(user.id, agent_id, body.prompt)
+    background_tasks.add_task(execute_agent_run, user.id, run["id"])
+    return run
 
 
 @router.get("/workflows")
@@ -564,11 +639,13 @@ async def run_agents(body: RunIn, background_tasks: BackgroundTasks, user: Curre
 def list_runs(user: CurrentUser = Depends(get_current_user)) -> list[dict]:
     return run_query(
         """
-        select r.id, r.workflow_id, w.name as workflow_name, r.prompt, r.output, r.status,
+        select r.id, r.workflow_id, w.name as workflow_name, r.agent_id, a.name as agent_name,
+               r.trigger_source, r.prompt, r.output, r.status,
                r.current_node_id, r.current_node_label, r.error_message, r.created_at,
                r.started_at, r.completed_at, e.overall_score
         from runs r
         left join workflows w on w.id = r.workflow_id
+        left join agents a on a.id = r.agent_id
         left join run_evaluations e on e.run_id = r.id
         where r.user_id = %(user_id)s
         order by r.created_at desc
@@ -610,9 +687,10 @@ def run_evaluation(run_id: str, user: CurrentUser = Depends(get_current_user)) -
 def run_docx(run_id: str, user: CurrentUser = Depends(get_current_user)) -> Response:
     run = run_one(
         """
-        select r.*, w.name as workflow_name
+        select r.*, w.name as workflow_name, a.name as agent_name
         from runs r
         left join workflows w on w.id = r.workflow_id
+        left join agents a on a.id = r.agent_id
         where r.id = %(id)s and r.user_id = %(user_id)s
         """,
         {"id": run_id, "user_id": user.id},

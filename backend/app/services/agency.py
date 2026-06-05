@@ -9,11 +9,11 @@ from app.db.database import run_one, run_query
 
 
 DEFAULT_CLIENT = {
-    "name": "Harbor Homeware",
-    "industry": "Homeware ecommerce",
-    "goals": "Reduce wasted paid search spend, grow non-branded organic traffic, and improve monthly client reporting quality.",
-    "tone": "Clear, practical, commercially focused, and suitable for client stakeholders.",
-    "constraints": "Use only synthetic performance and agency documents. Do not claim live access to ad platforms or analytics tools.",
+    "name": "Academic Demo Workspace",
+    "industry": "Synthetic document operations",
+    "goals": "Demonstrate document-grounded agent execution, approval-gated task creation, and report generation without real company data.",
+    "tone": "Clear, practical, evidence-grounded, and suitable for academic review.",
+    "constraints": "Use only synthetic documents uploaded to the database. Do not claim live access to external business systems.",
 }
 
 DEFAULT_CAMPAIGNS = [
@@ -50,21 +50,6 @@ def ensure_agency_defaults(user_id: str) -> dict:
         )
         client = run_one("select * from clients where id = %(id)s", {"id": client_id})
 
-    for campaign in DEFAULT_CAMPAIGNS:
-        existing = run_one(
-            "select id from campaigns where user_id = %(user_id)s and client_id = %(client_id)s and name = %(name)s",
-            {"user_id": user_id, "client_id": client["id"], "name": campaign["name"]},
-        )
-        if existing:
-            continue
-        run_query(
-            """
-            insert into campaigns (id, user_id, client_id, name, channel, objective, monthly_budget, notes)
-            values (%(id)s, %(user_id)s, %(client_id)s, %(name)s, %(channel)s, %(objective)s, %(monthly_budget)s, %(notes)s)
-            """,
-            {"id": str(uuid4()), "user_id": user_id, "client_id": client["id"], **campaign},
-        )
-
     return {"ok": True, "client_id": str(client["id"])}
 
 
@@ -98,19 +83,14 @@ def workspace_context(user_id: str, prompt: str = "") -> tuple[str, dict | None,
         """,
         {"user_id": user_id, "client_id": client["id"]},
     )
-    campaign_text = "\n".join(
-        f"- {campaign['name']} ({campaign['channel']}): {campaign['objective']} Budget: {campaign['monthly_budget'] or 'N/A'}"
-        for campaign in campaigns
-    )
     task_text = "\n".join(f"- {task['title']} [{task['discipline']}, {task['priority']}, {task['status']}]" for task in tasks)
     context = (
-        f"Client: {client['name']}\n"
-        f"Industry: {client['industry']}\n"
+        f"Workspace: {client['name']}\n"
+        f"Domain: {client['industry']}\n"
         f"Goals: {client['goals']}\n"
         f"Tone: {client['tone']}\n"
         f"Constraints: {client['constraints']}\n\n"
-        f"Campaigns:\n{campaign_text or 'No campaigns yet.'}\n\n"
-        f"Recent agency tasks:\n{task_text or 'No tasks yet.'}"
+        f"Recent approved or proposed tasks:\n{task_text or 'No tasks yet.'}"
     )
     return context, client, campaigns, tasks
 
@@ -159,7 +139,7 @@ def _primary_campaign(campaigns: list[dict], channel: str) -> dict | None:
 def create_task_proposal(
     user_id: str,
     run_id: str,
-    workflow_id: str,
+    workflow_id: str | None,
     client: dict,
     campaign: dict | None,
     title: str,
@@ -233,13 +213,11 @@ def create_task_proposal(
     )
 
 
-def propose_monthly_actions(user_id: str, run_id: str, workflow_id: str, prompt: str, notes: str) -> list[dict]:
+def propose_monthly_actions(user_id: str, run_id: str, workflow_id: str | None, prompt: str, notes: str) -> list[dict]:
     ensure_agency_defaults(user_id)
     _, client, campaigns, _ = workspace_context(user_id, prompt)
     if not client:
         return []
-    ppc_campaign = _primary_campaign(campaigns, "ppc")
-    seo_campaign = _primary_campaign(campaigns, "seo")
     evidence = _excerpt(notes)
     proposals = [
         create_task_proposal(
@@ -247,10 +225,10 @@ def propose_monthly_actions(user_id: str, run_id: str, workflow_id: str, prompt:
             run_id,
             workflow_id,
             client,
-            ppc_campaign,
-            "Audit wasted PPC spend and negative keyword gaps",
-            f"Review PPC search-intent mismatches, wasted spend patterns, and negative keyword candidates. Evidence: {evidence}",
-            "ppc",
+            None,
+            "Validate retrieved evidence against the user request",
+            f"Review the retrieved document evidence, identify unsupported claims, and mark any gaps that require additional source material. Evidence: {evidence}",
+            "research",
             "high",
         ),
         create_task_proposal(
@@ -258,10 +236,10 @@ def propose_monthly_actions(user_id: str, run_id: str, workflow_id: str, prompt:
             run_id,
             workflow_id,
             client,
-            seo_campaign,
-            "Prioritize next-month SEO technical and content fixes",
-            f"Convert the SEO agent findings into a prioritized implementation queue. Evidence: {evidence}",
-            "seo",
+            None,
+            "Convert agent findings into an approved work queue",
+            f"Turn the strongest agent recommendations into clear follow-up tasks with owners, priorities, and acceptance criteria. Evidence: {evidence}",
+            "operations",
             "high",
         ),
         create_task_proposal(
@@ -269,10 +247,10 @@ def propose_monthly_actions(user_id: str, run_id: str, workflow_id: str, prompt:
             run_id,
             workflow_id,
             client,
-            seo_campaign,
-            "Create content briefs for highest-intent organic opportunities",
-            f"Draft briefs around the content gaps and search-intent opportunities found in the run. Evidence: {evidence}",
-            "content",
+            None,
+            "Prepare a document-grounded report appendix",
+            f"Create a concise appendix mapping key recommendations to source documents and citations for the final DOCX output. Evidence: {evidence}",
+            "reporting",
             "medium",
         ),
     ]
@@ -281,8 +259,8 @@ def propose_monthly_actions(user_id: str, run_id: str, workflow_id: str, prompt:
         run_id,
         workflow_id,
         "tasks_proposed",
-        "Monthly PPC/SEO action plan queued for approval",
-        {"count": len(proposals), "client": client["name"]},
+        "Document-grounded task plan queued for approval",
+        {"count": len(proposals), "workspace": client["name"]},
     )
     return proposals
 
