@@ -1,0 +1,203 @@
+{
+  "generated_for": "ModelWeave_Diploma_Thesis_UA_Full.docx",
+  "date": "2026-06-05",
+  "language": "Ukrainian final thesis",
+  "references_policy": "English-language sources only",
+  "frontend": "https://modelweave-two.vercel.app",
+  "backend": "https://api-production-e70a9.up.railway.app",
+  "repository": "https://github.com/serhiiSotskyi/multi-agent-knowledge-platform",
+  "references": [
+    {
+      "authors": "Vaswani, A. et al.",
+      "title": "Attention Is All You Need",
+      "venue": "Advances in Neural Information Processing Systems, 2017",
+      "url": "https://arxiv.org/abs/1706.03762"
+    },
+    {
+      "authors": "Lewis, P. et al.",
+      "title": "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks",
+      "venue": "NeurIPS, 2020",
+      "url": "https://arxiv.org/abs/2005.11401"
+    },
+    {
+      "authors": "Karpukhin, V. et al.",
+      "title": "Dense Passage Retrieval for Open-Domain Question Answering",
+      "venue": "EMNLP, 2020",
+      "url": "https://arxiv.org/abs/2004.04906"
+    },
+    {
+      "authors": "Reimers, N.; Gurevych, I.",
+      "title": "Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks",
+      "venue": "EMNLP-IJCNLP, 2019",
+      "url": "https://arxiv.org/abs/1908.10084"
+    },
+    {
+      "authors": "Malkov, Y.; Yashunin, D.",
+      "title": "Efficient and Robust Approximate Nearest Neighbor Search Using Hierarchical Navigable Small World Graphs",
+      "venue": "IEEE TPAMI, 2018",
+      "url": "https://arxiv.org/abs/1603.09320"
+    },
+    {
+      "authors": "Yao, S. et al.",
+      "title": "ReAct: Synergizing Reasoning and Acting in Language Models",
+      "venue": "ICLR, 2023",
+      "url": "https://arxiv.org/abs/2210.03629"
+    },
+    {
+      "authors": "Shinn, N. et al.",
+      "title": "Reflexion: Language Agents with Verbal Reinforcement Learning",
+      "venue": "NeurIPS, 2023",
+      "url": "https://arxiv.org/abs/2303.11366"
+    },
+    {
+      "authors": "Wu, Q. et al.",
+      "title": "AutoGen: Enabling Next-Gen LLM Applications via Multi-Agent Conversation",
+      "venue": "Microsoft Research, 2023",
+      "url": "https://arxiv.org/abs/2308.08155"
+    },
+    {
+      "authors": "Wang, L. et al.",
+      "title": "A Survey on Large Language Model Based Autonomous Agents",
+      "venue": "Frontiers of Computer Science, 2024",
+      "url": "https://arxiv.org/abs/2308.11432"
+    },
+    {
+      "authors": "Zhao, W. X. et al.",
+      "title": "A Survey of Large Language Models",
+      "venue": "arXiv, 2023",
+      "url": "https://arxiv.org/abs/2303.18223"
+    },
+    {
+      "authors": "Robertson, S.; Zaragoza, H.",
+      "title": "The Probabilistic Relevance Framework: BM25 and Beyond",
+      "venue": "Foundations and Trends in Information Retrieval, 2009",
+      "url": "https://www.nowpublishers.com/article/Details/INR-019"
+    },
+    {
+      "authors": "Manning, C.; Raghavan, P.; Schutze, H.",
+      "title": "Introduction to Information Retrieval",
+      "venue": "Cambridge University Press, 2008",
+      "url": "https://nlp.stanford.edu/IR-book/"
+    },
+    {
+      "authors": "Anthropic",
+      "title": "Claude API documentation",
+      "venue": "Official documentation, accessed 2026",
+      "url": "https://docs.anthropic.com/"
+    },
+    {
+      "authors": "Anthropic",
+      "title": "Messages API",
+      "venue": "Official documentation, accessed 2026",
+      "url": "https://docs.anthropic.com/en/api/messages"
+    },
+    {
+      "authors": "OWASP Foundation",
+      "title": "OWASP Top 10 for Large Language Model Applications",
+      "venue": "Official project, 2025",
+      "url": "https://owasp.org/www-project-top-10-for-large-language-model-applications/"
+    },
+    {
+      "authors": "NIST",
+      "title": "Artificial Intelligence Risk Management Framework (AI RMF 1.0)",
+      "venue": "National Institute of Standards and Technology, 2023",
+      "url": "https://www.nist.gov/itl/ai-risk-management-framework"
+    },
+    {
+      "authors": "Supabase",
+      "title": "Authentication documentation",
+      "venue": "Official documentation, accessed 2026",
+      "url": "https://supabase.com/docs/guides/auth"
+    },
+    {
+      "authors": "Supabase",
+      "title": "Row Level Security documentation",
+      "venue": "Official documentation, accessed 2026",
+      "url": "https://supabase.com/docs/guides/database/postgres/row-level-security"
+    },
+    {
+      "authors": "Qdrant",
+      "title": "Qdrant vector database documentation",
+      "venue": "Official documentation, accessed 2026",
+      "url": "https://qdrant.tech/documentation/"
+    },
+    {
+      "authors": "Qdrant",
+      "title": "Collections and points documentation",
+      "venue": "Official documentation, accessed 2026",
+      "url": "https://qdrant.tech/documentation/concepts/collections/"
+    },
+    {
+      "authors": "FastAPI",
+      "title": "FastAPI documentation",
+      "venue": "Official documentation, accessed 2026",
+      "url": "https://fastapi.tiangolo.com/"
+    },
+    {
+      "authors": "Next.js",
+      "title": "App Router documentation",
+      "venue": "Official documentation, accessed 2026",
+      "url": "https://nextjs.org/docs/app"
+    },
+    {
+      "authors": "Vercel",
+      "title": "Deployments documentation",
+      "venue": "Official documentation, accessed 2026",
+      "url": "https://vercel.com/docs/deployments"
+    },
+    {
+      "authors": "Railway",
+      "title": "Railway documentation",
+      "venue": "Official documentation, accessed 2026",
+      "url": "https://docs.railway.com/"
+    },
+    {
+      "authors": "React Flow",
+      "title": "React Flow documentation",
+      "venue": "Official documentation, accessed 2026",
+      "url": "https://reactflow.dev/"
+    },
+    {
+      "authors": "LangChain",
+      "title": "LangGraph Platform generally available",
+      "venue": "Official blog, 2025",
+      "url": "https://www.langchain.com/blog/langgraph-platform-ga"
+    },
+    {
+      "authors": "CrewAI",
+      "title": "CrewAI AMP documentation",
+      "venue": "Official documentation, accessed 2026",
+      "url": "https://docs.crewai.com/en/enterprise/introduction"
+    },
+    {
+      "authors": "Relevance AI",
+      "title": "Build an AI workforce",
+      "venue": "Official documentation, accessed 2026",
+      "url": "https://relevanceai.mintlify.dev/docs/build/workforces/build-an-ai-workforce/add-agents"
+    },
+    {
+      "authors": "Y Combinator",
+      "title": "Gumloop company profile",
+      "venue": "YC profile, accessed 2026",
+      "url": "https://www.ycombinator.com/companies/gumloop"
+    },
+    {
+      "authors": "PostgreSQL Global Development Group",
+      "title": "PostgreSQL Row Security Policies",
+      "venue": "Official documentation, accessed 2026",
+      "url": "https://www.postgresql.org/docs/current/ddl-rowsecurity.html"
+    },
+    {
+      "authors": "Python Software Foundation",
+      "title": "Python documentation",
+      "venue": "Official documentation, accessed 2026",
+      "url": "https://docs.python.org/3/"
+    },
+    {
+      "authors": "ECMA International",
+      "title": "Office Open XML File Formats",
+      "venue": "Standard overview, accessed 2026",
+      "url": "https://ecma-international.org/publications-and-standards/standards/ecma-376/"
+    }
+  ]
+}

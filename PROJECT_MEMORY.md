@@ -75,6 +75,53 @@ Known rule/template documents:
 
 ### 2026-06-05
 
+Current task update:
+- Pushed the product simplification commit `da54aed` to `main`.
+- Verified the new Vercel frontend deployment at `https://modelweave-two.vercel.app`; backend health is OK at Railway, but Railway CLI auth is expired locally, so backend redeploy still needs user re-login.
+- Started final artifact update for the Ukrainian diploma thesis and English defense presentation.
+- Created `scripts/build_final_thesis_docx_ua.py` to regenerate the Ukrainian final thesis with the current document-agent product framing, updated screenshots, real Word equations, English abstract, production links, and references.
+- Removed raw Markdown-looking snippets from the thesis generator before final render QA.
+
+Checks run in this update:
+- `git status --short`
+- `git branch --show-current`
+- `git log -1 --oneline`
+- `python3 scripts/build_final_thesis_docx_ua.py`
+- `rg` checks for old PPC/SEO/campaign/Summon wording and raw Markdown markers in the final thesis generator.
+
+Next actions in this update:
+- Render the regenerated Ukrainian thesis to PDF/PNGs and verify page count, screenshots, formulas, old wording, and rule compliance.
+- Update the English presentation with 1-2 mathematical slides and current screenshots.
+- Run QA/subagent review against the updated artifacts.
+- Commit and push final thesis/presentation artifacts to `main`.
+
+Final artifact update completed:
+- Regenerated `ModelWeave_Diploma_Thesis_UA_Full.docx` as the final Ukrainian diploma thesis.
+- Rendered the thesis to PDF/PNGs in `evidence/rendered-thesis-ua-final-2026-06-05/`.
+- Verified rendered thesis page count: 63 total pages; 46 main-body pages from `ВСТУП` to before references.
+- Verified DOCX structure includes title page, Ukrainian annotation, English abstract, contents, introduction, numbered chapters, conclusions after each chapter, general conclusions, references, and appendices.
+- Verified final thesis DOCX contains 126 Word equation objects, 12 tables, and 22 drawings.
+- Verified no old PPC/SEO/Harbor/campaign/Agency Runs/Summon wording and no raw Markdown markers in the final thesis text/XML.
+- Updated `ModelWeave_Small_Defense_Presentation_EN.pptx` to 10 slides with two applied-math slides covering RAG/vectorization/embeddings and workflow/state/cost/quality formulas.
+- Updated presentation screenshots, product framing, QR code, and speaker notes; note length is about 1715 words, estimated under 15 minutes with transitions.
+- Exported presentation previews/contact sheet and a fresh 10-page PDF under `outputs/manual-20260527-defense/presentations/modelweave-small-defense/`.
+- Verified production frontend `https://modelweave-two.vercel.app` with HTTP 200 and Playwright screenshot `evidence/screenshots/production-frontend-2026-06-05.png`.
+- Verified production backend health endpoint returns `{"ok":true,"app":"ModelWeave"}`.
+- QA subagent independently confirmed thesis and PPTX structure, math slides, page count, stale-term scans, and deployment caveat.
+
+Final checks run:
+- `backend/.venv/bin/python -m compileall backend/app`
+- `npm run build` from `frontend/`
+- DOCX render: `render_docx.py ModelWeave_Diploma_Thesis_UA_Full.docx --output_dir evidence/rendered-thesis-ua-final-2026-06-05 --emit_pdf`
+- `pdfinfo` and `pdftotext` on rendered thesis.
+- DOCX ZIP/XML inspection for equation/table/drawing counts and stale terms.
+- Presentation artifact build with `build_artifact_deck.mjs --slide-count 10`.
+- Presentation PDF export with LibreOffice.
+- Production checks with `curl` and Playwright.
+
+Open deployment item:
+- Railway CLI is unauthorized locally, so the production backend health endpoint works but forced redeploy of the latest backend code still requires `railway login`.
+
 Current task:
 - Implementing the ModelWeave product simplification and agent execution upgrade.
 - Pivoting the visible app from PPC/SEO campaign operations to an academic document-agent platform centered on Database, Agents, Workflows, Runs, Approvals, Tasks, and Reports.
